@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "bpm"
+version = "0.1.0"
+description = "Bin package manager, manage binary package from github release"
+authors = ["lxl66566 <lxl66566@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+lastversion = ">=3.5.0"
+simpleufcs = "^1.0.0"
+duckdb = "^0.9.2"
+py7zr = "^0.20.8"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[[tool.poetry.source]]
+name = "tsinghua-pypi"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+priority = "default"
