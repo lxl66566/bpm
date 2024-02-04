@@ -13,12 +13,35 @@ subparsers = parser.add_subparsers(
 
 install_parser = subparsers.add_parser("install", aliases=["i"])
 install_parser.add_argument("packages", nargs="+", help="Package name to install")
+install_parser.add_argument(
+    "-q",
+    "--quiet",
+    action="store_true",
+    help="not ask, install the best match repo",
+)
+install_parser.add_argument(
+    "--one-bin",
+    metavar="BIN_NAME",
+    nargs="?",
+    help="install given binary only. Use package name as binary name by default.",
+)
+install_parser.add_argument(
+    "--no-pre",
+    action="store_true",
+    help="do not include pre-release",
+)
+install_parser.add_argument(
+    "--prefer-gnu",
+    action="store_true",
+    help="bpm prefers musl target by default, you can change this default option.",
+)
 
 remove_parser = subparsers.add_parser("remove", aliases=["r"])
 remove_parser.add_argument("packages", nargs="+", help="Package name to remove")
 
-search_parser = subparsers.add_parser("search", aliases=["r"])
-search_parser.add_argument("packages", nargs="+", help="Package name to search")
+# not support search, temporarily
+# search_parser = subparsers.add_parser("search", aliases=["s"])
+# search_parser.add_argument("packages", nargs="+", help="Package name to search")
 
 update_parser = subparsers.add_parser("update", aliases=["u"])
 update_parser.add_argument("packages", nargs="+", help="Package name to update")
@@ -29,4 +52,8 @@ info_parser.add_argument(
 )
 
 
-args = parser.parse_args()
+def main(argv=None):
+    args = parser.parse_args(argv)
+
+
+main()
