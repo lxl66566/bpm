@@ -7,9 +7,9 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-lastversion = ">=3.5.0"
+# lastversion = ">=3.5.0"
 simpleufcs = "^1.0.0"
-duckdb = "^0.9.2"
+# duckdb = "^0.9.2"
 py7zr = "^0.20.8"
 
 

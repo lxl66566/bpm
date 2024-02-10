@@ -1,3 +1,6 @@
+# warning: unused code
+# this is a (maybe) future implemention in duckdb, but now it will only use pickle (in storage.py) instead.
+
 import functools
 
 import duckdb as db
