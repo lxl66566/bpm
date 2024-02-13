@@ -1,7 +1,7 @@
 import pickle
 from contextlib import suppress
 
-from constants import DATABASE_PATH
+from constants import DATABASE_PATH, INFO_BASE_STRING
 from search import RepoHadler
 
 config: list[RepoHadler] = []
@@ -27,6 +27,6 @@ def write_config():
 
 
 def info_repos():
-    print("{:20}{:60}{:20}".format("Name", "Url", "Version"))
+    print(INFO_BASE_STRING.format("Name", "Url", "Version"))
     for repo in config:
         print(repo)

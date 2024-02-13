@@ -4,7 +4,7 @@ from pprint import pprint
 from typing import Optional
 
 import requests
-from constants import OPTION_REPO_NUM
+from constants import INFO_BASE_STRING, OPTION_REPO_NUM
 from utils import RepoNotFoundError
 
 
@@ -21,7 +21,7 @@ class RepoHadler:
         self.set(**kwargs)
 
     def __str__(self) -> str:
-        return f"{self.name:20}{self.url:60}{self.version:20}"
+        return INFO_BASE_STRING.format(self.name, self.url, self.version)
 
     def __lt__(self, other: "RepoHadler"):
         return self.name < other.name
