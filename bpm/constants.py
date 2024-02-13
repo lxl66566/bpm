@@ -1,7 +1,13 @@
 import pathlib
 import platform
 
-assert platform.system() == "Linux", "This script is now for Linux only."
+match platform.system():
+    case "Linux":
+        CONF_PATH = pathlib.Path("/etc/bpm")
+    case "Windows":
+        CONF_PATH = pathlib.Path.home() / "AppData/Local/bpm"
+    case _:
+        raise NotImplementedError("Unsupported platform")
 
-CONF_PATH = pathlib.Path("/etc/bpm")
 DATABASE_PATH = CONF_PATH / "bpm.db"
+OPTION_REPO_NUM = 5  # the number of repos to select in asking

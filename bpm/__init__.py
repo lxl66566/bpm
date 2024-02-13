@@ -1,6 +1,8 @@
 import argparse
 import logging
 
+from storage import info_repos
+
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
 
 parser = argparse.ArgumentParser(
@@ -50,10 +52,9 @@ info_parser = subparsers.add_parser("info", help="Info package.")
 info_parser.add_argument(
     "package", nargs="?", help="Package name to info. If not given, show all packages."
 )
+info_parser.set_defaults(func=lambda _: info_repos())
+# info_parser.set_defaults(func=lambda x: print(x))
 
 
-def main(argv=None):
-    args = parser.parse_args(argv)
-
-
-main()
+args = parser.parse_args()
+args.func(args)
