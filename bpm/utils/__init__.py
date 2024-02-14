@@ -1,8 +1,25 @@
 import functools
+import os
+import platform
+import sys
 import tempfile
 from pathlib import Path
 
 TEST = False
+
+
+def is_root() -> bool:
+    """
+    only linux needs root.
+    """
+    if platform.system() == "Linux" and os.geteuid() != 0:
+        return False
+    return True
+
+
+def check_root():
+    if not is_root():
+        sys.exit("You need to have root privileges to run this command.")
 
 
 # unused code

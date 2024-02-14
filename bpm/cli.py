@@ -1,8 +1,7 @@
 import argparse
 import sys
 
-from .storage import repo_group
-from .utils.exceptions import RepoNotFoundError
+from .command import cli_info, cli_install, cli_remove, cli_update
 
 parser = argparse.ArgumentParser(
     prog="bpm",
@@ -41,35 +40,28 @@ install_parser.add_argument(
     action="store_true",
     help="bpm prefers musl target by default, you can change this default option.",
 )
+install_parser.set_defaults(func=cli_install)
+
 
 remove_parser = subparsers.add_parser("remove", aliases=["r"])
-remove_parser.add_argument("packages", nargs="+", help="Package name to remove.")
+remove_parser.add_argument("packages", nargs="+", help="Package names to remove.")
+remove_parser.set_defaults(func=cli_remove)
 
 # not support search, temporarily
 # search_parser = subparsers.add_parser("search", aliases=["s"])
 # search_parser.add_argument("packages", nargs="+", help="Package name to search")
 
 update_parser = subparsers.add_parser("update", aliases=["u"])
-update_parser.add_argument("packages", nargs="+", help="Package name to update")
+update_parser.add_argument(
+    "packages", nargs="*", help="Package names to update. Update all by default."
+)
+update_parser.set_defaults(func=cli_update)
 
 info_parser = subparsers.add_parser("info", help="Info package.")
 info_parser.add_argument(
     "package", nargs="?", help="Package name to info. If not given, show all packages."
 )
-
-
-def info_repos(args: argparse.Namespace):
-    try:
-        if not args.package:
-            repo_group.info_repos()
-        else:
-            repo_group.info_one_repo(str(args.package))
-    except RepoNotFoundError as e:
-        print(e)
-        exit(1)
-
-
-info_parser.set_defaults(func=info_repos)
+info_parser.set_defaults(func=cli_info)
 
 
 def main():

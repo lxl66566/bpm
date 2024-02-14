@@ -4,6 +4,7 @@ from contextlib import suppress
 from pathlib import Path
 from pprint import pprint
 from tempfile import TemporaryDirectory
+from typing import Optional
 
 from .search import RepoHadler
 from .utils.constants import DATABASE_PATH, INFO_BASE_STRING
@@ -32,18 +33,29 @@ class RepoGroup:
         for repo in self.repos:
             print(repo)
 
-    def info_one_repo(self, repo: str | RepoHadler) -> RepoHadler | None:
+    def find_repo(self, repo: str | RepoHadler) -> tuple[int, Optional[RepoHadler]]:
         """
-        print ALL messages about one repo.
+        Find a repo.
+        return the index and the object of repo.
         """
         if isinstance(repo, str):
             repo = RepoHadler(repo)
         index = bisect.bisect_left(self.repos, repo)
-        if index != len(self.repos) and self.repos[index].name == repo:
-            pprint(vars(self.repos[index]))
-            return self.repos[index]
+        if index != len(self.repos) and self.repos[index] == repo:
+            return (index, self.repos[index])
+        return (-1, None)
+
+    def info_one_repo(self, repo: str | RepoHadler) -> RepoHadler:
+        """
+        Print ALL messages about one repo.
+        If not found, raise exception `RepoNotFoundError`.
+        """
+        _, result = self.find_repo(repo)
+        if result:
+            pprint(vars(result))
+            return result
         else:
-            raise RepoNotFoundError(repo.name)
+            raise RepoNotFoundError(getattr(repo, "name", repo))
 
     def insert_repo(self, repo: RepoHadler):
         """
@@ -52,6 +64,17 @@ class RepoGroup:
         index = bisect.bisect_left(self.repos, repo)
         self.repos.insert(index, repo)
         self.save()
+
+    def remove_repo(self, repo: str | RepoHadler) -> RepoHadler:
+        """
+        Remove repo and save.
+        """
+        index, result = self.find_repo(repo)
+        if result:
+            self.repos.pop(index)
+            self.save()
+        else:
+            raise RepoNotFoundError(repo.name)
 
 
 import unittest  # noqa: E402

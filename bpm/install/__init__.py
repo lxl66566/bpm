@@ -1,16 +1,17 @@
 import io
 import logging as log
+import platform
 import tarfile
 import zipfile
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-import py7zr
 import requests
 import tqdm
 
-from .utils.exceptions import TarPathTraversalException
+from ..search import RepoHadler
+from ..utils.exceptions import TarPathTraversalException
 
 
 def rename_old(_path: Path):
@@ -116,6 +117,8 @@ def extract(buffer: io.BytesIO, to_dir: Path) -> Path:
             with zipfile.ZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
         except zipfile.BadZipFile:
+            import py7zr
+
             with py7zr.SevenZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
 
@@ -170,7 +173,8 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
 
 def install_on_linux(
     path: Path,
-    bin_name: Optional[str] = None,
+    # how about using multiple candidate bin_names : list[str] ?
+    bin_name: str,
     one_bin: bool = False,
     rename: bool = True,
     recorder: Optional[list[str]] = None,
@@ -251,6 +255,24 @@ def install_on_linux(
                     install_bin(file)
                 else:
                     log.debug(f"cannot match {name}.")
+
+
+def auto_install(
+    repo: RepoHadler,
+    pkgsrc: Path,
+    rename: bool = True,
+):
+    """
+    Install by different platforms.
+    """
+
+    match platform.system():
+        case "Linux":
+            install_on_linux(
+                pkgsrc, repo.bin_name, repo.one_bin, rename, repo.installed_files
+            )
+        case _:
+            raise NotImplementedError(f"{platform.system()} is not supported now.")
 
 
 import unittest  # noqa: E402

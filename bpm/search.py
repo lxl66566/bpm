@@ -1,5 +1,6 @@
 import logging as log
 import platform
+from functools import reduce
 from pprint import pprint
 from typing import Optional
 
@@ -12,12 +13,16 @@ from .utils.exceptions import RepoNotFoundError
 class RepoHadler:
     def __init__(self, name: str, **kwargs):
         self.name = name
+        self.bin_name = name
         self.site = "github"
         self.repo_name = None
         self.repo_owner = None
         self.asset = None
         self.version = None
         self.installed_files: list[str] = []
+        self.prefer_gnu: bool = False
+        self.no_pre: bool = False
+        self.one_bin: bool = False
 
         self.set(**kwargs)
 
@@ -49,6 +54,17 @@ class RepoHadler:
             case _:
                 raise NotImplementedError
 
+    @property
+    def file_list(self):
+        """
+        Get the "IndexSet" of `installed_files`.
+        """
+        # same as `unique` function, keep them
+        self.installed_files = reduce(
+            lambda re, x: re + [x] if x not in re else re, self.installed_files, []
+        )
+        return self.installed_files
+
     def set_url(self, url: str):
         """
         set repo_owner and repo_name from url
@@ -77,7 +93,9 @@ class RepoHadler:
             if data["items"]:
                 return [x["html_url"] for x in data["items"]]
             else:
-                return None
+                raise RepoNotFoundError
+        else:
+            r.raise_for_status()
 
     def ask(self, quiet: bool = False):
         """
@@ -88,15 +106,16 @@ class RepoHadler:
         if not repo_selections:
             raise RepoNotFoundError
         if quiet:
+            log.info(f"auto select repo: {repo_selections[0]}")
             return self.set_url(repo_selections[0])
         for i, item in enumerate(repo_selections):
-            print(f"{i+1}: {item['html_url']}")
+            print(f"{i+1}: {item}")
         temp = input("please select a repo to download (default 1): ")
         if not temp.strip():
             temp = "1"
         return self.set_url(repo_selections[int(temp) - 1])
 
-    def get_asset(self, prefer_gnu: bool = False, no_pre: bool = False):
+    def get_asset(self):
         """
         get version and filter out which asset link to download
         """
@@ -106,7 +125,7 @@ class RepoHadler:
         ).json()
         if len(r) == 0:
             log.error("This repo has no release.")
-            exit(1)
+            raise RepoNotFoundError
         self.version = r[0]["tag_name"]
 
         # check the latest 3 releases and get the asset list.
@@ -126,11 +145,24 @@ class RepoHadler:
         if temp:
             assets = temp
         # 3. musl or gnu
-        if not prefer_gnu:
+        if not self.prefer_gnu:
             assets = sorted(assets, key=lambda x: "musl" not in x)
         assert assets, "This repo has no available asset."
         self.asset = assets[0]
+        log.info(f"selected asset: {self.asset}")
         return self
+
+    def update_asset(self) -> Optional[tuple[str, str]]:
+        """
+        update assets list.
+
+        `Returns`: `None` if has no update, `(old_version, new_version)` if has update.
+        """
+        old_version = self.version
+        self.get_asset()
+        if old_version == self.version:
+            return None
+        return (old_version, self.version)
 
 
 import unittest  # noqa: E402
@@ -151,6 +183,10 @@ class Test(unittest.TestCase):
         self.assertEqual(temp[0].name, "abcd")
         self.assertEqual(temp[1].name, "eza")
         self.assertEqual(temp[2].name, "xy")
+
+    def test_get_filelist(self):
+        test = RepoHadler("eza").set(installed_files=["a", "b", "a", "c"])
+        self.assertEqual(test.file_list, ["a", "b", "c"])
 
 
 if __name__ == "__main__":
