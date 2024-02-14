@@ -4,8 +4,9 @@ from pprint import pprint
 from typing import Optional
 
 import requests
-from constants import INFO_BASE_STRING, OPTION_REPO_NUM
-from utils import RepoNotFoundError
+
+from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM
+from .utils.exceptions import RepoNotFoundError
 
 
 class RepoHadler:
@@ -21,7 +22,9 @@ class RepoHadler:
         self.set(**kwargs)
 
     def __str__(self) -> str:
-        return INFO_BASE_STRING.format(self.name, self.url, self.version)
+        return INFO_BASE_STRING.format(
+            self.name or "", self.url or "", self.version or ""
+        )
 
     def __lt__(self, other: "RepoHadler"):
         return self.name < other.name
@@ -32,10 +35,10 @@ class RepoHadler:
         return self
 
     @property
-    def url(self):
-        assert (
-            self.repo_name and self.repo_owner
-        ), "repo_name and repo_owner must be set"
+    def url(self) -> Optional[str]:
+        if not self.repo_name or not self.repo_owner:
+            log.warning("repo_name and repo_owner must be set")
+            return None
         return f"https://{self.site}.com/{self.repo_owner}/{self.repo_name}"
 
     @property

@@ -9,7 +9,8 @@ from typing import Optional
 import py7zr
 import requests
 import tqdm
-from utils import TarPathTraversalException
+
+from .utils.exceptions import TarPathTraversalException
 
 
 def rename_old(_path: Path):

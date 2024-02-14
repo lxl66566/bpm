@@ -4,7 +4,8 @@
 import functools
 
 import duckdb as db
-from constants import DATABASE_PATH
+
+from .utils.constants import DATABASE_PATH
 
 TABLE_NAME = "package"
 
