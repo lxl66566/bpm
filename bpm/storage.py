@@ -20,13 +20,12 @@ class RepoGroup:
 
     def read(self):
         with suppress(FileNotFoundError):
-            with self.db_path.open("rb") as f:
-                self.repos = pickle.load(f)
+            self.repos = pickle.loads(self.db_path.read_bytes())
         return self
 
     def save(self):
-        with self.db_path.open("wb") as f:
-            pickle.dump(self.repos, f)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.db_path.write_bytes(pickle.dumps(self.repos))
 
     def info_repos(self):
         print(INFO_BASE_STRING.format("Name", "Url", "Version"))
@@ -74,23 +73,30 @@ class RepoGroup:
             self.repos.pop(index)
             self.save()
         else:
-            raise RepoNotFoundError(repo.name)
+            raise RepoNotFoundError(getattr(repo, "name", repo))
 
 
 import unittest  # noqa: E402
 
 
 class Test(unittest.TestCase):
-    def test_insert_repo(self):
+    def test_repogroup_operations(self):
         with TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir) / "repos.db"
             test_group = RepoGroup(db_path=tmpdir)
+            # insert, save
             test_group.insert_repo(RepoHadler("test_repo"))
             test_group.insert_repo(RepoHadler("abc"))
             test_group.insert_repo(RepoHadler("z"))
+            test_group.repos.clear()
+            # read
+            test_group.read()
             self.assertEqual(
                 ["abc", "test_repo", "z"], [r.name for r in test_group.repos]
             )
+            # remove
+            test_group.remove_repo("test_repo")
+            self.assertEqual(["abc", "z"], [r.name for r in test_group.repos])
 
 
 if __name__ == "__main__":

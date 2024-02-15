@@ -6,13 +6,16 @@ from tempfile import TemporaryDirectory
 from .install import auto_install, download_and_extract, restore
 from .search import RepoHadler
 from .storage import repo_group
-from .utils import check_root
+from .utils import check_root, trace
 from .utils.exceptions import RepoNotFoundError
 
 
 def cli_install(args):
     check_root()
     for package in args.packages:
+        if repo_group.find_repo(package)[1]:
+            log.info(f"{package} is already installed.")
+            continue
         repo = (
             RepoHadler(
                 package,
@@ -31,7 +34,9 @@ def cli_install(args):
                 auto_install(repo, main_path, rename=True)
                 repo_group.insert_repo(repo)
             except Exception as e:
-                log.error(f"Failed to install `{repo.name}`: {e}. Restoring...")
+                log.error(f"Failed to install `{repo.name}`: {e}.")
+                trace()
+                log.error("Restoring...")
                 # rollback.
                 if repo.installed_files:
                     restore(repo.file_list)
@@ -43,12 +48,19 @@ def cli_remove(args):
     check_root()
     failed = []
     for package in args.packages:
-        log.info(f"Removing `{package}`...")
+        repo = repo_group.find_repo(package)[1]
+        if not repo:
+            log.info(f"Package `{package}` is not installed.")
+            failed.append(package)
+            continue
         try:
+            log.info(f"Removing `{package}`...")
+            restore(repo.file_list)
             repo_group.remove_repo(package)
         except Exception as e:
             failed.append(package)
             log.error(f"Failed to remove `{package}`: {e}")
+            trace()
             continue
         log.info(f"`{package}` removed successfully.")
     log.info(
@@ -79,6 +91,7 @@ def cli_update(args):
         except Exception as e:
             failed.append(repo.name)
             log.error(f"Failed to update {repo.name}: {e}")
+            trace()
 
     if not args.packages:  # update all
         num = len(repo_group.repos)

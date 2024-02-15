@@ -193,12 +193,13 @@ def install_on_linux(
     def install_to(_from: Path, _to: Path, mode: Optional[int] = None):
         install(_from, _to / _from.name, rename=rename, mode=mode, recorder=recorder)
 
-    def install_bin(p: Path, once: list = []):
-        if once:
+    def install_bin(p: Path):
+        """Install binary file."""
+        if hasattr(install_bin, "called"):
             log.debug(f"already installed {p.name}")
             return
         install_to(p, pkgdst / "bin", mode=0o755)
-        once.append(p.name)
+        install_bin.called = True
 
     def install_completions(path: Path):
         """Install completions from a dir."""
@@ -255,6 +256,9 @@ def install_on_linux(
                     install_bin(file)
                 else:
                     log.debug(f"cannot match {name}.")
+
+    if not any(map(lambda x: x.startswith("/usr/bin"), recorder)):
+        log.warning("No binary file found, please check the release package.")
 
 
 def auto_install(
@@ -328,7 +332,7 @@ class Test(unittest.TestCase):
             self.assertFalse((test2 / "overwrite.old").exists())
 
     def test_extract(self):
-        src_path = Path(__file__).parent.parent.resolve() / "tests"
+        src_path = Path(__file__).parent.parent.parent.resolve() / "tests"
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
             with (src_path / "noroot.tar.gz").open("rb") as f:

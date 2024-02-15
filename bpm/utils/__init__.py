@@ -1,8 +1,10 @@
 import functools
+import logging as log
 import os
 import platform
 import sys
 import tempfile
+import traceback
 from pathlib import Path
 
 TEST = False
@@ -20,6 +22,14 @@ def is_root() -> bool:
 def check_root():
     if not is_root():
         sys.exit("You need to have root privileges to run this command.")
+
+
+def trace():
+    """
+    Trace back only in debug mode.
+    """
+    if log.getLogger().isEnabledFor(log.DEBUG):
+        traceback.print_exc()
 
 
 # unused code

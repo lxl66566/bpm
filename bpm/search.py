@@ -34,6 +34,9 @@ class RepoHadler:
     def __lt__(self, other: "RepoHadler"):
         return self.name < other.name
 
+    def __eq__(self, __value: object) -> bool:
+        return self.name == __value.name
+
     def set(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
