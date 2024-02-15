@@ -230,8 +230,9 @@ def install_on_linux(
 
     # 1. only install one bin
     if one_bin or len(first_layer) == 1:
-        for bin in path.glob("*" if len(first_layer) == 1 else bin_name):
-            install_bin(bin)
+        bin = next(path.glob("*" if len(first_layer) == 1 else bin_name))
+        first_layer.remove(bin)
+        install_bin(bin)
         if one_bin:
             return
 

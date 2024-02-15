@@ -33,6 +33,7 @@ def cli_install(args):
             try:
                 auto_install(repo, main_path, rename=True)
                 repo_group.insert_repo(repo)
+                log.info(f"Successfully installed `{repo.name}`.")
             except Exception as e:
                 log.error(f"Failed to install `{repo.name}`: {e}.")
                 trace()
