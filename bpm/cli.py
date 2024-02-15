@@ -30,15 +30,22 @@ install_parser.add_argument(
     action="store_true",
     help="install given binary only. Use package name as binary name by default.",
 )
-install_parser.add_argument(
-    "--no-pre",
-    action="store_true",
-    help="do not include pre-releases.",
-)
+# github api not support info pre releases. https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
+# install_parser.add_argument(
+#     "--no-pre",
+#     action="store_true",
+#     help="do not include pre-releases.",
+# )
 install_parser.add_argument(
     "--prefer-gnu",
     action="store_true",
     help="bpm prefers musl target by default, you can change this default option.",
+)
+install_parser.add_argument(
+    "-n",
+    "--dry-run",
+    action="store_true",
+    help="print the install position, but not install actually.",
 )
 install_parser.set_defaults(func=cli_install)
 

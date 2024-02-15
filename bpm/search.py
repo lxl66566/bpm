@@ -3,6 +3,7 @@ import platform
 from functools import reduce
 from pprint import pprint
 from typing import Optional
+from urllib.parse import urlparse
 
 import requests
 
@@ -72,10 +73,11 @@ class RepoHadler:
         """
         set repo_owner and repo_name from url
         """
-        url = url.rstrip("/").lstrip(f"https://{self.site}.com/").split("/")
-        assert len(url) == 2, "parsing invalid URL"
-        self.repo_owner = url[0]
-        self.repo_name = url[1]
+        # why does https://t.me/withabsolutex/1479 happens?
+        r = urlparse(url).path.strip("/").split("/")
+        assert len(r) == 2, "parsing invalid URL"
+        self.repo_owner = r[0]
+        self.repo_name = r[1]
         return self
 
     def search(self) -> Optional[list[str]]:
@@ -123,20 +125,21 @@ class RepoHadler:
         get version and filter out which asset link to download
         """
         assert self.url is not None, "use ask() before get_asset"
-        r = requests.get(
-            f"{self.api_base}/repos/{self.repo_owner}/{self.repo_name}/releases"
-        ).json()
-        if len(r) == 0:
-            log.error("This repo has no release.")
+        api = f"{self.api_base}/repos/{self.repo_owner}/{self.repo_name}/releases"
+        r: list = requests.get(api).json()
+        log.debug(f"asset api: {api}")
+        if not isinstance(r, list):
+            log.error(f"repo {self.repo_owner}/{self.repo_name} not found.")
             raise RepoNotFoundError
-        self.version = r[0]["tag_name"]
 
-        # check the latest 3 releases and get the asset list.
-        assets: list[str]
-        for i in range(min(len(r), 3)):
-            assets = [x["browser_download_url"] for x in r[i]["assets"]]
-            if assets:
-                break
+        r = r[:25]  # only gets the front 25 results.
+        r = list(filter(lambda x: bool(x["assets"]), r))
+        if len(r) == 0:
+            log.error("This repo has no available releases.")
+            raise RepoNotFoundError
+
+        self.version = r[0]["tag_name"]
+        assets = [x["browser_download_url"] for x in r[0]["assets"]]
 
         # select
         # 1. platform
@@ -190,6 +193,11 @@ class Test(unittest.TestCase):
     def test_get_filelist(self):
         test = RepoHadler("eza").set(installed_files=["a", "b", "a", "c"])
         self.assertEqual(test.file_list, ["a", "b", "c"])
+
+    def test_parse_url(self):
+        test = RepoHadler("yazi").set_url("https://github.com/sxyazi/yazi")
+        self.assertEqual(test.repo_owner, "sxyazi")
+        self.assertEqual(test.repo_name, "yazi")
 
 
 if __name__ == "__main__":

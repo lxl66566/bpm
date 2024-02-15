@@ -10,6 +10,8 @@ from typing import Optional
 import requests
 import tqdm
 
+import bpm.utils as utils
+
 from ..search import RepoHadler
 from ..utils.exceptions import TarPathTraversalException
 
@@ -35,11 +37,19 @@ def install(
     """
     install a file to system.
     """
+
+    def record():
+        recorder is not None and recorder.append(str(_to.absolute()))
+
+    if utils.TEST:
+        log.info(f"dry run: {_to}")
+        record()
+        return
     _to = Path(_to)
     if _from.is_dir():
         _to.mkdir(exist_ok=True)
         log.info(f"mkdir {_from} -> {_to}")
-        recorder is not None and recorder.append(str(_to.absolute()))
+        record()
         return
     if _to.exists():
         if rename:
@@ -48,7 +58,7 @@ def install(
             _to.unlink()
     _from.replace(_to)
     log.info(f"{_from} -> {_to}")
-    recorder is not None and recorder.append(str(_to.absolute()))
+    record()
     mode and _to.chmod(mode)
 
 
@@ -191,7 +201,16 @@ def install_on_linux(
     pkgdst = Path(pkgdst)
 
     def install_to(_from: Path, _to: Path, mode: Optional[int] = None):
-        install(_from, _to / _from.name, rename=rename, mode=mode, recorder=recorder)
+        """
+        install file to a folder.
+        """
+        install(
+            _from,
+            _to / _from.name,
+            rename=rename,
+            mode=mode,
+            recorder=recorder,
+        )
 
     def install_bin(p: Path):
         """Install binary file."""
@@ -209,21 +228,12 @@ def install_on_linux(
             return
         for file in path.rglob("*.fish"):
             # $fish_complete_path
-            install_to(
-                file,
-                pkgdst / "share/fish/vendor_completions.d",
-            )
+            install_to(file, pkgdst / "share/fish/vendor_completions.d")
         for file in path.rglob("*.bash"):
-            install_to(
-                file,
-                pkgdst / "share/bash-completion/completions",
-            )
+            install_to(file, pkgdst / "share/bash-completion/completions")
         for file in path.rglob("_*"):
             if "zsh" in file.read_text():
-                install_to(
-                    file,
-                    pkgdst / "share/zsh/site-functions",
-                )
+                install_to(file, pkgdst / "share/zsh/site-functions")
 
     first_layer: list[Path] = list(path.glob("*"))
     assert first_layer, f"{path} is empty"
@@ -258,6 +268,7 @@ def install_on_linux(
                 else:
                     log.debug(f"cannot match {name}.")
 
+    # check binary
     if not any(map(lambda x: x.startswith("/usr/bin"), recorder)):
         log.warning("No binary file found, please check the release package.")
 
@@ -352,6 +363,16 @@ class Test(unittest.TestCase):
                 main = extract(f, tmp_dir)
                 self.assertEqual(main, tmp_dir)
                 self.assertTrue((main / "1").exists())
+
+    @utils.with_test
+    def test_dry_run(self):
+        with TemporaryDirectory() as tmp_dir:
+            tmp_dir = Path(tmp_dir)
+            src = tmp_dir / "src"
+            dst = tmp_dir / "dst"
+            src.touch()
+            install(src, dst)
+            self.assertFalse(dst.exists())
 
     def simulate_install(self):
         with TemporaryDirectory() as tmp_dir:

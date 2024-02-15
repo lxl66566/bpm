@@ -6,21 +6,24 @@ from tempfile import TemporaryDirectory
 from .install import auto_install, download_and_extract, restore
 from .search import RepoHadler
 from .storage import repo_group
-from .utils import check_root, trace
+from .utils import check_root, set_dry_run, trace
 from .utils.exceptions import RepoNotFoundError
 
 
 def cli_install(args):
-    check_root()
+    if args.dry_run:
+        set_dry_run()
+    else:
+        check_root()
     for package in args.packages:
-        if repo_group.find_repo(package)[1]:
+        if not args.dry_run and repo_group.find_repo(package)[1]:
             log.info(f"{package} is already installed.")
             continue
         repo = (
             RepoHadler(
                 package,
                 prefer_gnu=args.prefer_gnu,
-                no_pre=args.no_pre,
+                # no_pre=args.no_pre,
                 bin_name=args.bin_name or package,
                 one_bin=args.one_bin,
             )
@@ -32,7 +35,8 @@ def cli_install(args):
             main_path = download_and_extract(repo.asset, tmp_dir)
             try:
                 auto_install(repo, main_path, rename=True)
-                repo_group.insert_repo(repo)
+                if not args.dry_run:
+                    repo_group.insert_repo(repo)
                 log.info(f"Successfully installed `{repo.name}`.")
             except Exception as e:
                 log.error(f"Failed to install `{repo.name}`: {e}.")

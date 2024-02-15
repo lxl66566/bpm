@@ -10,6 +10,11 @@ from pathlib import Path
 TEST = False
 
 
+def set_dry_run():
+    global TEST
+    TEST = True
+
+
 def is_root() -> bool:
     """
     only linux needs root.
@@ -32,6 +37,15 @@ def trace():
         traceback.print_exc()
 
 
+def multi_in(parts: list | str, total: str):
+    """
+    return any strings in the list is a part of one string.
+    """
+    if isinstance(parts, str):
+        parts = [parts]
+    return any(x in total for x in parts)
+
+
 # unused code
 def with_temp(func):
     @functools.wraps(func)
@@ -46,9 +60,25 @@ def with_test(func):
     @functools.wraps(func)
     def warpper(*args, **kwargs):
         global TEST
+        record = TEST
         TEST = True
         result = func(*args, **kwargs)
-        TEST = False
+        TEST = record
         return result
 
     return warpper
+
+
+import unittest  # noqa: E402
+
+
+class Test(unittest.TestCase):
+    def test_multi_in(self):
+        self.assertTrue(multi_in(["a", "b"], "a"))
+        self.assertTrue(multi_in(["win", "windo"], "windals"))
+        self.assertTrue(multi_in("123", "1234"))
+        self.assertFalse(multi_in(["13", "14"], "1234"))
+
+
+if __name__ == "__main__":
+    unittest.main()
