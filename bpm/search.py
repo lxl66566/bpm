@@ -115,10 +115,22 @@ class RepoHadler:
             return self.set_url(repo_selections[0])
         for i, item in enumerate(repo_selections):
             print(f"{i+1}: {item}")
-        temp = input("please select a repo to download (default 1): ")
-        if not temp.strip():
-            temp = "1"
-        return self.set_url(repo_selections[int(temp) - 1])
+        try:
+            temp = input("please select a repo to download (default 1): ")
+            if not temp.strip():
+                temp = "1"
+            return self.set_url(repo_selections[int(temp) - 1])
+        except KeyboardInterrupt:
+            print("Canceled.")
+            exit(0)
+        except IndexError:
+            print(
+                f"Invalid input: the number should not be more than {OPTION_REPO_NUM}"
+            )
+            exit(1)
+        except ValueError:
+            print("Invalid input: please input a valid number.")
+            exit(1)
 
     def get_asset(self):
         """
