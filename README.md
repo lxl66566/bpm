@@ -17,19 +17,32 @@ Rolling distributions, such as Archlinux, are also unable to install software fr
 
 ## Installation
 
+BPM needs to be installed to root user.
+
+### pip
+
+```sh
+sudo pip install bin-package-manager --break-system-packages
+sudo bpm
+```
+
+Note the risk of potentially breaking system packages.
+
 ### pipx
 
 You can use pipx to install BPM.
 
 ```sh
-pipx install bin-package-manager
+sudo pipx install bin-package-manager
 ```
+
+pipx will only install for the current user, so `sudo` is required. Alternatively, you can track on [this issue](https://github.com/pypa/pipx/issues/754) and use other methods mentioned there.
 
 ### Source code
 
 If you don't want to use pipx, you can also download and use the source code.
 
-BPM depends on Python modules: `requests`, `tqdm`, `py7zr` (optional).
+BPM depends on Python modules: `requests`, `tqdm`, `py7zr` (optional), please install them manually.
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git

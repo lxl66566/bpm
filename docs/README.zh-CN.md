@@ -17,19 +17,32 @@ BPM 当前仅支持 Linux 系统，python 版本 >= 3.10。
 
 ## 安装
 
+BPM 需要安装到 root 用户下。
+
+### pip
+
+```sh
+sudo pip install bin-package-manager --break-system-packages
+sudo bpm
+```
+
+注意潜在的破坏系统包的风险。
+
 ### pipx
 
 您可以使用 pipx 安装 BPM。
 
 ```sh
-pipx install bin-package-manager
+sudo pipx install bin-package-manager
 ```
+
+pipx 仅会为当前用户安装，因此需要使用 `sudo pipx`。或者，您可以跟踪[此 issue](https://github.com/pypa/pipx/issues/754) 并使用其中提到的方法。
 
 ### 源码
 
 如果您不希望使用 pipx，也可以下载并使用源码。
 
-BPM 依赖 Python 模块：`requests`, `tqdm`，`py7zr`（可选的）。
+BPM 依赖 Python 模块：`requests`, `tqdm`，`py7zr`（可选的），请手动安装。
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git
