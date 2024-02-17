@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from .install import auto_install, download_and_extract, restore
-from .search import RepoHadler
+from .search import RepoHandler
 from .storage import repo_group
 from .utils import check_root, set_dry_run, trace
 from .utils.exceptions import RepoNotFoundError
@@ -20,7 +20,7 @@ def cli_install(args):
             log.info(f"{package} is already installed.")
             continue
         repo = (
-            RepoHadler(
+            RepoHandler(
                 package,
                 prefer_gnu=args.prefer_gnu,
                 # no_pre=args.no_pre,
@@ -79,7 +79,7 @@ def cli_update(args):
     check_root()
     failed = []
 
-    def update(repo: RepoHadler):
+    def update(repo: RepoHandler):
         try:
             log.info(f"Updating `{repo.name}`...")
             if result := repo.update_asset():

@@ -12,7 +12,7 @@ import tqdm
 
 import bpm.utils as utils
 
-from ..search import RepoHadler
+from ..search import RepoHandler
 from ..utils.exceptions import TarPathTraversalException
 
 
@@ -274,7 +274,7 @@ def install_on_linux(
 
 
 def auto_install(
-    repo: RepoHadler,
+    repo: RepoHandler,
     pkgsrc: Path,
     rename: bool = True,
 ):

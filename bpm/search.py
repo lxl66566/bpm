@@ -11,7 +11,7 @@ from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM
 from .utils.exceptions import RepoNotFoundError
 
 
-class RepoHadler:
+class RepoHandler:
     def __init__(self, name: str, **kwargs):
         self.name = name
         self.bin_name = name
@@ -32,7 +32,7 @@ class RepoHadler:
             self.name or "", self.url or "", self.version or ""
         )
 
-    def __lt__(self, other: "RepoHadler"):
+    def __lt__(self, other: "RepoHandler"):
         return self.name < other.name
 
     def __eq__(self, __value: object) -> bool:
@@ -188,7 +188,7 @@ import unittest  # noqa: E402
 
 class Test(unittest.TestCase):
     def test_search(self):
-        test = RepoHadler("eza").ask(quiet=True).get_asset()
+        test = RepoHandler("eza").ask(quiet=True).get_asset()
         self.assertEqual(
             test.url,
             "https://github.com/eza-community/eza",
@@ -196,18 +196,18 @@ class Test(unittest.TestCase):
         pprint(vars(test))
 
     def test_sort(self):
-        temp = [RepoHadler("eza"), RepoHadler("abcd"), RepoHadler("xy")]
+        temp = [RepoHandler("eza"), RepoHandler("abcd"), RepoHandler("xy")]
         temp.sort()
         self.assertEqual(temp[0].name, "abcd")
         self.assertEqual(temp[1].name, "eza")
         self.assertEqual(temp[2].name, "xy")
 
     def test_get_filelist(self):
-        test = RepoHadler("eza").set(installed_files=["a", "b", "a", "c"])
+        test = RepoHandler("eza").set(installed_files=["a", "b", "a", "c"])
         self.assertEqual(test.file_list, ["a", "b", "c"])
 
     def test_parse_url(self):
-        test = RepoHadler("yazi").set_url("https://github.com/sxyazi/yazi")
+        test = RepoHandler("yazi").set_url("https://github.com/sxyazi/yazi")
         self.assertEqual(test.repo_owner, "sxyazi")
         self.assertEqual(test.repo_name, "yazi")
 

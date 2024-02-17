@@ -6,14 +6,14 @@ from pprint import pprint
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-from .search import RepoHadler
+from .search import RepoHandler
 from .utils.constants import DATABASE_PATH, INFO_BASE_STRING
 from .utils.exceptions import RepoNotFoundError
 
 
 class RepoGroup:
     def __init__(self, db_path=DATABASE_PATH):
-        self.repos: list[RepoHadler] = []
+        self.repos: list[RepoHandler] = []
         self.db_path = db_path
         # read config once in the init of RepoGroup.
         self.read()
@@ -32,19 +32,19 @@ class RepoGroup:
         for repo in self.repos:
             print(repo)
 
-    def find_repo(self, repo: str | RepoHadler) -> tuple[int, Optional[RepoHadler]]:
+    def find_repo(self, repo: str | RepoHandler) -> tuple[int, Optional[RepoHandler]]:
         """
         Find a repo.
         return the index and the object of repo.
         """
         if isinstance(repo, str):
-            repo = RepoHadler(repo)
+            repo = RepoHandler(repo)
         index = bisect.bisect_left(self.repos, repo)
         if index != len(self.repos) and self.repos[index] == repo:
             return (index, self.repos[index])
         return (-1, None)
 
-    def info_one_repo(self, repo: str | RepoHadler) -> RepoHadler:
+    def info_one_repo(self, repo: str | RepoHandler) -> RepoHandler:
         """
         Print ALL messages about one repo.
         If not found, raise exception `RepoNotFoundError`.
@@ -56,7 +56,7 @@ class RepoGroup:
         else:
             raise RepoNotFoundError(getattr(repo, "name", repo))
 
-    def insert_repo(self, repo: RepoHadler):
+    def insert_repo(self, repo: RepoHandler):
         """
         Insert repo to RepoGroup, and save.
         """
@@ -64,7 +64,7 @@ class RepoGroup:
         self.repos.insert(index, repo)
         self.save()
 
-    def remove_repo(self, repo: str | RepoHadler) -> RepoHadler:
+    def remove_repo(self, repo: str | RepoHandler) -> RepoHandler:
         """
         Remove repo and save.
         """
@@ -85,9 +85,9 @@ class Test(unittest.TestCase):
             tmpdir = Path(tmpdir) / "repos.db"
             test_group = RepoGroup(db_path=tmpdir)
             # insert, save
-            test_group.insert_repo(RepoHadler("test_repo"))
-            test_group.insert_repo(RepoHadler("abc"))
-            test_group.insert_repo(RepoHadler("z"))
+            test_group.insert_repo(RepoHandler("test_repo"))
+            test_group.insert_repo(RepoHandler("abc"))
+            test_group.insert_repo(RepoHandler("z"))
             test_group.repos.clear()
             # read
             test_group.read()
