@@ -916,6 +916,22 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "tsinghua-pypi"
 
 [[package]]
+name = "simpleufcs"
+version = "1.0.0"
+description = "A simple Uniform Function Call Syntax (UFCS) implementation in python."
+optional = false
+python-versions = "*"
+files = [
+    {file = "simpleufcs-1.0.0-py3-none-any.whl", hash = "sha256:c7c9d0b42950c68feb1c5c6dd3bdb74aefa14433cfe921bcae5fe4bee47c8703"},
+    {file = "simpleufcs-1.0.0.tar.gz", hash = "sha256:ba66960400fb0ca191aa44aabd69fddaaad7d1a05e83eec5486b55ad36db3f2b"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+reference = "tsinghua-pypi"
+
+[[package]]
 name = "texttable"
 version = "1.7.0"
 description = "module to create simple ASCII tables"
@@ -978,23 +994,7 @@ type = "legacy"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "tsinghua-pypi"
 
-[[package]]
-name = "windows-path-adder"
-version = "1.0.4"
-description = "add environment path in windows."
-optional = false
-python-versions = "*"
-files = [
-    {file = "windows-path-adder-1.0.4.tar.gz", hash = "sha256:fb43a6bd8bbc5a1ec325117146580aaf66e22f04f04fbf6941b485dd0a2be142"},
-    {file = "windows_path_adder-1.0.4-py3-none-any.whl", hash = "sha256:d235971f64008206d018453742d7192b21a0ff4306876698873d9ae0880ed84d"},
-]
-
-[package.source]
-type = "legacy"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-reference = "tsinghua-pypi"
-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "54fc80376940aa364d4ae0bd4627f863ef01eaa3ab91e239af808e1bd3c1c2d8"
+content-hash = "3327b6b740054d80ea2db7f130953665b7548ecf7686aef32f7101792e6a34ff"

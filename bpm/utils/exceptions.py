@@ -11,3 +11,10 @@ class AssetNotFoundError(FileNotFoundError):
 class TarPathTraversalException(Exception):
     def __init__(self, message: str = "Tar Path exceed boundary."):
         super().__init__(message)
+
+
+class LnkNotFoundError(FileNotFoundError):
+    def __init__(self, lnk_name: str = ""):
+        super().__init__(
+            f"Lnk {(" '" + lnk_name + "'") if lnk_name else ""} not found."
+        )

@@ -10,12 +10,12 @@ from typing import Optional
 
 import requests
 import tqdm
+from pylnk3 import for_file
 
 import bpm.utils as utils
 
-from pylnk3 import for_file
 from ..search import RepoHandler
-from ..utils.constants import APP_PATH, BIN_PATH
+from ..utils.constants import APP_PATH, BIN_PATH, CONF_PATH, LINUX, WINDOWS
 from ..utils.exceptions import TarPathTraversalException
 
 
@@ -104,23 +104,35 @@ def restore(recorder: Optional[list[str]] = None):
         rename_old_rev(file)
 
 
-def remove_on_windows(repo: RepoHandler):
+def remove_on_windows(recorder: Optional[list[str]] = None):
     """
     Remove a repo on windows
     """
-    assert platform.system() == "Windows", "This function only works on windows"
-
-    REPO_PATH = APP_PATH / repo.name
-    if utils.TEST:
-        log.debug("dry run: Remove old packages")
-        REPO_PATH.exists() and log.info(f"dry run: Remove repo {REPO_PATH}.")
+    assert WINDOWS, "This function only works on windows"
+    if not recorder:
         return
-    if REPO_PATH.exists():
-        shutil.rmtree(REPO_PATH)
-        log.info(f"Remove repo {REPO_PATH}.")
-    for file in repo.file_list:
-        Path(file).unlink()
-        log.info(f"Remove symlink {REPO_PATH}.")
+
+    for file in map(lambda x: Path(x), reversed(recorder)):
+        if utils.TEST:
+            log.info(f"dry run: Remove {file}.")
+            continue
+        assert file.is_relative_to(CONF_PATH), f"UNSAFE REMOVE! try to remove: {file}"
+        if file.is_dir():
+            shutil.rmtree(file)
+            log.info(f"Remove dir {file}.")
+        else:
+            file.unlink()
+            log.info(f"Remove symlink {file}.")
+
+
+def remove(recorder: Optional[list[str]] = None):
+    """
+    remove repo on any platform.
+    """
+    if WINDOWS:
+        remove_on_windows(recorder)
+    elif LINUX:
+        restore(recorder)
 
 
 def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
@@ -220,7 +232,7 @@ def install_on_linux(
 
     `path`: The "main path" dir of files to be installed.
     """
-    assert platform.system() == "Linux", "Not a linux system"
+    assert LINUX, "Not a linux system"
     pkgdst = Path(pkgdst)
 
     def install_to(_from: Path, _to: Path, mode: Optional[int] = None):
@@ -307,13 +319,13 @@ def install_on_windows(
 
     `path`: The "main path" dir of files to be installed.
     """
-    assert platform.system() == "Windows", "This function only supports Windows."
+    assert WINDOWS, "This function only supports Windows."
     pkgsrc = Path(pkgsrc)
 
     APP_PATH.mkdir(parents=True, exist_ok=True)
     BIN_PATH.mkdir(parents=True, exist_ok=True)
     REPO_PATH = APP_PATH / repo.name
-    remove_on_windows(repo)
+    remove_on_windows(repo.file_list)
 
     # 1. move all files to a folder.
     if utils.TEST:
@@ -322,6 +334,7 @@ def install_on_windows(
     else:
         pkgdst = Path(shutil.move(pkgsrc, REPO_PATH))
         log.info(f"Install package to {REPO_PATH}.")
+        repo.add_file_list(REPO_PATH)
 
     # 2. softlink binary files.
     for file in pkgdst.rglob(repo.bin_name):
@@ -337,7 +350,7 @@ def install_on_windows(
             # link_path.symlink_to(file)
             for_file(str(file), str(link_path))
             log.info(f"Create softlink: {file} -> {link_path}")
-            repo.installed_files.append(link_path)
+            repo.add_file_list(link_path)
 
     # ensure windows bin path
     utils.ensure_windows_path()

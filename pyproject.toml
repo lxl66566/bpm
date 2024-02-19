@@ -21,7 +21,7 @@ py7zr = { version = "^0.20.8", markers = "sys_platform == 'win32'" }
 requests = "^2.31.0"
 tqdm = "^4.66.2"
 pylnk3 = { version = "^0.4.2", markers = "sys_platform == 'win32'" }
-windows-path-adder = { version = "^1.0.4", markers = "sys_platform == 'win32'" }
+simpleufcs = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]

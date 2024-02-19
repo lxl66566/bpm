@@ -1,14 +1,13 @@
 import functools
 import logging as log
 import os
-import platform
 import sys
 import tempfile
 import traceback
 from pathlib import Path
-from windowspathadder import add_windows_path
 
-from .constants import BIN_PATH
+from ..lib.windowspathadder import add_windows_path
+from .constants import BIN_PATH, LINUX, WINDOWS
 
 TEST = False
 
@@ -22,7 +21,7 @@ def is_root() -> bool:
     """
     only linux needs root.
     """
-    if platform.system() == "Linux" and os.geteuid() != 0:
+    if LINUX and os.geteuid() != 0:
         return False
     return True
 
@@ -50,12 +49,9 @@ def multi_in(parts: list | str, total: str):
 
 
 def ensure_windows_path():
-    assert platform.system() == "Windows", "This function only works on Windows."
-    current_path = os.environ.get("PATH", "")
-    log.debug(f"Current PATH: {current_path}")
-    if not TEST and BIN_PATH not in current_path.split(os.pathsep):
+    assert WINDOWS, "This function only works on Windows."
+    if not TEST:
         add_windows_path(BIN_PATH)
-        log.info(f"Added {BIN_PATH} to system PATH.")
 
 
 # unused code

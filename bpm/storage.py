@@ -7,8 +7,8 @@ from tempfile import TemporaryDirectory
 from typing import Optional
 
 from .search import RepoHandler
-from .utils.constants import DATABASE_PATH, INFO_BASE_STRING
-from .utils.exceptions import RepoNotFoundError
+from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, WINDOWS
+from .utils.exceptions import LnkNotFoundError, RepoNotFoundError
 
 
 class RepoGroup:
@@ -74,6 +74,18 @@ class RepoGroup:
             self.save()
         else:
             raise RepoNotFoundError(getattr(repo, "name", repo))
+
+    def alias_lnk(self, old_path: Path, new_path: Path):
+        assert WINDOWS, "alias is not supported on non-Windows systems"
+        for repo in self.repos:
+            for i, s in enumerate(repo.installed_files):
+                s = Path(s)
+                if s == old_path:
+                    s.replace(new_path)
+                    repo.installed_files[i] = str(new_path)
+                    self.save()
+                    return
+        raise LnkNotFoundError(str(old_path))
 
 
 import unittest  # noqa: E402

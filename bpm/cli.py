@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .command import cli_info, cli_install, cli_remove, cli_update
+from .command import cli_alias, cli_info, cli_install, cli_remove, cli_update
 
 parser = argparse.ArgumentParser(
     prog="bpm",
@@ -69,6 +69,13 @@ info_parser.add_argument(
     "package", nargs="?", help="Package name to info. If not given, show all packages."
 )
 info_parser.set_defaults(func=cli_info)
+
+alias_parser = subparsers.add_parser(
+    "alias", help="Alias package. (Windows only; Linux use shell alias instead.)"
+)
+alias_parser.add_argument("new_name", help="New name of the bin.")
+alias_parser.add_argument("old_name", help="Old name of the bin.")
+alias_parser.set_defaults(func=cli_alias)
 
 
 def main():

@@ -1,13 +1,15 @@
 import logging as log
-import platform
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from .install import auto_install, download_and_extract, remove_on_windows, restore
+from simpleufcs import UFCS
+
+from .install import auto_install, download_and_extract, remove
 from .search import RepoHandler
 from .storage import repo_group
 from .utils import check_root, set_dry_run, trace
+from .utils.constants import BIN_PATH, WINDOWS
 from .utils.exceptions import RepoNotFoundError
 
 
@@ -35,18 +37,26 @@ def cli_install(args):
             main_path = download_and_extract(repo.asset, tmp_dir)
             try:
                 auto_install(repo, main_path, rename=True)
+                log.info(f"Successfully installed `{repo.name}`.")
+                if WINDOWS:
+                    bins = (
+                        UFCS(repo.file_list)
+                        .filter(lambda x: x.endswith(".lnk"))
+                        .map(lambda x: Path(x).stem)
+                        .map(lambda x: f"`{x}`")
+                    )
+                    log.info(
+                        f"You can press `Win+r`, type {", ".join(bins)} and Enter to start software.\nIf you want to use it in cmd, add `.lnk` suffix for them."
+                    )
                 if not args.dry_run:
                     repo_group.insert_repo(repo)
-                log.info(f"Successfully installed `{repo.name}`.")
+
             except Exception as e:
                 log.error(f"Failed to install `{repo.name}`: {e}.")
                 trace()
                 log.error("Restoring...")
                 # rollback.
-                if platform.system() == "Windows":
-                    remove_on_windows(repo)
-                elif repo.installed_files:
-                    restore(repo.file_list)
+                remove(repo.file_list)
                 log.error("Files restored.")
                 sys.exit("Exiting...")
 
@@ -62,10 +72,7 @@ def cli_remove(args):
             continue
         try:
             log.info(f"Removing `{package}`...")
-            if platform.system() == "Windows":
-                remove_on_windows(repo)
-            else:
-                restore(repo.file_list)
+            remove(repo.file_list)
             repo_group.remove_repo(package)
         except Exception as e:
             failed.append(package)
@@ -131,3 +138,21 @@ def cli_info(args):
     except RepoNotFoundError as e:
         log.error(e)
         exit(1)
+
+
+def cli_alias(args):
+    assert WINDOWS, "Alias command is only supported on Windows."
+
+    def lnk_deal(n):
+        return n.rstrip(".lnk") + ".lnk"
+
+    args.old_name = lnk_deal(args.old_name)
+    args.new_name = lnk_deal(args.new_name)
+    file = list(BIN_PATH.glob(args.old_name))
+    if not file:
+        log.error(f"Lnk `{args.old_name}` not found.")
+        exit(1)
+    assert len(file) == 1, "Found multiple binaries with the same name."
+    file = file[0]
+    repo_group.alias_lnk(file, BIN_PATH / args.new_name)
+    log.info(f"Alias `{args.old_name}` to `{args.new_name}`.")

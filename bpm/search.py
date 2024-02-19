@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM
+from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from .utils.exceptions import AssetNotFoundError, RepoNotFoundError
 
 
@@ -26,7 +26,7 @@ class RepoHandler:
         self.one_bin: bool = False
 
         self.set(**kwargs)
-        if platform.system() == "Windows":
+        if WINDOWS:
             assert name not in ("app", "bin"), "Invalid repo name."
 
     def __str__(self) -> str:
@@ -46,7 +46,7 @@ class RepoHandler:
         return self
 
     def with_bin_name(self, bin_name: str | None):
-        if platform.system() == "Windows":
+        if WINDOWS:
             self.bin_name = bin_name.rstrip(".exe") + ".exe" if bin_name else "*.exe"
         else:
             self.bin_name = bin_name or self.name
@@ -78,6 +78,9 @@ class RepoHandler:
         )
         return self.installed_files
 
+    def add_file_list(self, file):
+        self.installed_files.append(str(file))
+
     def set_url(self, url: str):
         """
         set repo_owner and repo_name from url
@@ -89,7 +92,7 @@ class RepoHandler:
         self.repo_name = r[1]
         return self
 
-    def search(self) -> Optional[list[str]]:
+    def search(self, page=1) -> Optional[list[str]]:
         """
         get the 5 top repos to download
         """
@@ -98,6 +101,7 @@ class RepoHandler:
             params={
                 "q": f"{self.name} in:name",
                 "sort": "stars",
+                "page": page,
                 "per_page": OPTION_REPO_NUM,
             },
         )
@@ -116,30 +120,40 @@ class RepoHandler:
         ask what repo to install.
         please call `search()` before ask.
         """
-        repo_selections = self.search()
-        if not repo_selections:
-            raise RepoNotFoundError
-        if quiet:
-            log.info(f"auto select repo: {repo_selections[0]}")
-            return self.set_url(repo_selections[0])
-        for i, item in enumerate(repo_selections):
-            print(f"{i+1}: {item}")
-        try:
-            temp = input("please select a repo to download (default 1): ")
-            if not temp.strip():
-                temp = "1"
-            return self.set_url(repo_selections[int(temp) - 1])
-        except KeyboardInterrupt:
-            print("Canceled.")
-            exit(0)
-        except IndexError:
-            print(
-                f"Invalid input: the number should not be more than {OPTION_REPO_NUM}"
-            )
-            exit(1)
-        except ValueError:
-            print("Invalid input: please input a valid number.")
-            exit(1)
+        page = 1
+        while True:
+            repo_selections = self.search(page)
+            if not repo_selections:
+                raise RepoNotFoundError
+            if quiet:
+                log.info(f"auto select repo: {repo_selections[0]}")
+                return self.set_url(repo_selections[0])
+            for i, item in enumerate(repo_selections):
+                print(f"{i+1}: {item}")
+            try:
+                temp = input(
+                    "please select a repo to download (default 1), `m` for more, `p` for previous: "
+                ).strip()
+                if not temp:
+                    temp = "1"
+                elif temp == "m":
+                    page += 1
+                    continue
+                elif temp == "p":
+                    page -= 1
+                    continue
+                return self.set_url(repo_selections[int(temp) - 1])
+            except KeyboardInterrupt:
+                print("Canceled.")
+                exit(0)
+            except IndexError:
+                print(
+                    f"Invalid input: the number should not be more than {OPTION_REPO_NUM}"
+                )
+                exit(1)
+            except ValueError:
+                print("Invalid input: please input a valid number.")
+                exit(1)
 
     def get_asset(self):
         """
@@ -167,7 +181,7 @@ class RepoHandler:
         if temp:
             assets = temp
         # windows maybe use `win` instead of `windows`
-        elif platform.system() == "Windows" and "win" not in self.name.lower():
+        elif WINDOWS and "win" not in self.name.lower():
             assets = [x for x in assets if "win" in x.lower()]
             if not assets:
                 raise AssetNotFoundError
@@ -180,7 +194,7 @@ class RepoHandler:
             assets = sorted(assets, key=lambda x: "musl" not in x)
         # 4. tar, zip, 7z, other
         assets = sorted(assets, key=lambda x: not x.endswith(".7z"))
-        if platform.system() == "Windows":
+        if WINDOWS:
             assets = sorted(assets, key=lambda x: ".tar." not in x)
             assets = sorted(assets, key=lambda x: not x.endswith(".zip"))
         else:

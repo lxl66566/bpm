@@ -4,10 +4,10 @@
 
 bin package manager (BPM) 是一个基于 Github release 的包管理器，它允许用户安装并管理任意 Github release 上的二进制文件。
 
-BPM 当前仅支持 Linux 系统，python 版本 >= 3.10。
+BPM 支持 Windows 与 Linux 系统，python 版本 >= 3.10。
 
 > [!CAUTION]
-> 风险提示：BPM 可能会破坏您的计算机。使用 BPM 安装软件即代表您已接受此风险，并信任第三方 Github release 的打包者。
+> 风险提示：BPM Linux 可能会破坏您的计算机。使用 BPM 安装软件即代表您已接受此风险，并信任第三方 Github release 的打包者。
 
 ## 为什么有这个项目？
 
@@ -15,11 +15,15 @@ BPM 当前仅支持 Linux 系统，python 版本 >= 3.10。
 
 而滚动发行版，例如 Archlinux，也无法以 root 从 AUR 安装软件。
 
+Windows 下的常见包管理方式是 scoop，但是其需要打包者维护一个 manifest 列表。
+
 ## 安装
 
 BPM 需要安装到 root 用户下。
 
 ### pip
+
+#### Linux
 
 ```sh
 sudo pip install bin-package-manager --break-system-packages
@@ -27,6 +31,13 @@ sudo bpm
 ```
 
 注意潜在的破坏系统包的风险。
+
+#### Windows
+
+```sh
+pip install bin-package-manager
+bpm
+```
 
 ### pipx
 
@@ -58,6 +69,8 @@ python3 -m bpm
 
 ## 原理
 
+### Linux
+
 BPM 自动判断 asset 中的文件结构，并安装到系统中的相应位置。目前的安装内容是：
 
 1. 安装 binary
@@ -65,6 +78,10 @@ BPM 自动判断 asset 中的文件结构，并安装到系统中的相应位置
 3. 安装 completions
 
 BPM 会自动为已存在的文件添加 `.old` 后缀，以避免覆盖。卸载时，`.old` 文件将被恢复。
+
+### Windows
+
+BPM 下载文件夹到 `%userprofile%/bpm/app/<name>` 中，并为可执行文件创建快捷方式到 `%userprofile%/bpm/bin`，这个位置会被添加到 `%path%` 中。
 
 ## 开发
 
@@ -79,3 +96,4 @@ poetry run python -m unittest bpm/**/*.py  # 运行测试
 
 - [ ] no pre release
 - [x] try install
+- [x] windows support

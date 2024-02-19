@@ -1,6 +1,3 @@
-# my things
-/test*.*
-
 # database
 *.db
 
@@ -167,3 +164,7 @@ cython_debug/
 
 # profile
 *.prof
+
+# my things
+/test*.*
+!/bpm/lib
