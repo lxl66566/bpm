@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import requests
 
 from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM
-from .utils.exceptions import RepoNotFoundError
+from .utils.exceptions import AssetNotFoundError, RepoNotFoundError
 
 
 class RepoHandler:
@@ -26,6 +26,8 @@ class RepoHandler:
         self.one_bin: bool = False
 
         self.set(**kwargs)
+        if platform.system() == "Windows":
+            assert name not in ("app", "bin"), "Invalid repo name."
 
     def __str__(self) -> str:
         return INFO_BASE_STRING.format(
@@ -41,6 +43,13 @@ class RepoHandler:
     def set(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
+        return self
+
+    def with_bin_name(self, bin_name: str | None):
+        if platform.system() == "Windows":
+            self.bin_name = bin_name.rstrip(".exe") + ".exe" if bin_name else "*.exe"
+        else:
+            self.bin_name = bin_name or self.name
         return self
 
     @property
@@ -59,7 +68,7 @@ class RepoHandler:
                 raise NotImplementedError
 
     @property
-    def file_list(self):
+    def file_list(self) -> list[str]:
         """
         Get the "IndexSet" of `installed_files`.
         """
@@ -147,17 +156,21 @@ class RepoHandler:
         r = r[:25]  # only gets the front 25 results.
         r = list(filter(lambda x: bool(x["assets"]), r))
         if len(r) == 0:
-            log.error("This repo has no available releases.")
-            raise RepoNotFoundError
+            raise AssetNotFoundError
 
         self.version = r[0]["tag_name"]
-        assets = [x["browser_download_url"] for x in r[0]["assets"]]
+        assets: list[str] = [x["browser_download_url"] for x in r[0]["assets"]]
 
         # select
         # 1. platform
         temp = [x for x in assets if platform.system().lower() in x.lower()]
         if temp:
             assets = temp
+        # windows maybe use `win` instead of `windows`
+        elif platform.system() == "Windows" and "win" not in self.name.lower():
+            assets = [x for x in assets if "win" in x.lower()]
+            if not assets:
+                raise AssetNotFoundError
         # 2. architecture
         temp = [x for x in assets if platform.machine().lower() in x.lower()]
         if temp:
@@ -165,7 +178,17 @@ class RepoHandler:
         # 3. musl or gnu
         if not self.prefer_gnu:
             assets = sorted(assets, key=lambda x: "musl" not in x)
-        assert assets, "This repo has no available asset."
+        # 4. tar, zip, 7z, other
+        assets = sorted(assets, key=lambda x: not x.endswith(".7z"))
+        if platform.system() == "Windows":
+            assets = sorted(assets, key=lambda x: ".tar." not in x)
+            assets = sorted(assets, key=lambda x: not x.endswith(".zip"))
+        else:
+            assets = sorted(assets, key=lambda x: not x.endswith(".zip"))
+            assets = sorted(assets, key=lambda x: ".tar." not in x)
+
+        if not assets:
+            raise AssetNotFoundError
         self.asset = assets[0]
         log.info(f"selected asset: {self.asset}")
         return self

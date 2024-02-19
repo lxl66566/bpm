@@ -1,9 +1,10 @@
 import logging as log
+import platform
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from .install import auto_install, download_and_extract, restore
+from .install import auto_install, download_and_extract, remove_on_windows, restore
 from .search import RepoHandler
 from .storage import repo_group
 from .utils import check_root, set_dry_run, trace
@@ -23,10 +24,9 @@ def cli_install(args):
             RepoHandler(
                 package,
                 prefer_gnu=args.prefer_gnu,
-                # no_pre=args.no_pre,
-                bin_name=args.bin_name or package,
                 one_bin=args.one_bin,
             )
+            .with_bin_name(args.bin_name)
             .ask(quiet=args.quiet)
             .get_asset()
         )
@@ -43,9 +43,11 @@ def cli_install(args):
                 trace()
                 log.error("Restoring...")
                 # rollback.
-                if repo.installed_files:
+                if platform.system() == "Windows":
+                    remove_on_windows(repo)
+                elif repo.installed_files:
                     restore(repo.file_list)
-                    log.error("Files restored.")
+                log.error("Files restored.")
                 sys.exit("Exiting...")
 
 
@@ -60,7 +62,10 @@ def cli_remove(args):
             continue
         try:
             log.info(f"Removing `{package}`...")
-            restore(repo.file_list)
+            if platform.system() == "Windows":
+                remove_on_windows(repo)
+            else:
+                restore(repo.file_list)
             repo_group.remove_repo(package)
         except Exception as e:
             failed.append(package)

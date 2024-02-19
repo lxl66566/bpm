@@ -17,12 +17,11 @@ packages = [{ include = "bpm" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-# lastversion = ">=3.5.0"
-# simpleufcs = "^1.0.0"
-# duckdb = "^0.9.2"
-py7zr = { version = "^0.20.8", optional = true }
+py7zr = { version = "^0.20.8", markers = "sys_platform == 'win32'" }
 requests = "^2.31.0"
 tqdm = "^4.66.2"
+pylnk3 = { version = "^0.4.2", markers = "sys_platform == 'win32'" }
+windows-path-adder = { version = "^1.0.4", markers = "sys_platform == 'win32'" }
 
 [build-system]
 requires = ["poetry-core"]

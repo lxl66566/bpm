@@ -6,6 +6,9 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
+from windowspathadder import add_windows_path
+
+from .constants import BIN_PATH
 
 TEST = False
 
@@ -44,6 +47,15 @@ def multi_in(parts: list | str, total: str):
     if isinstance(parts, str):
         parts = [parts]
     return any(x in total for x in parts)
+
+
+def ensure_windows_path():
+    assert platform.system() == "Windows", "This function only works on Windows."
+    current_path = os.environ.get("PATH", "")
+    log.debug(f"Current PATH: {current_path}")
+    if not TEST and BIN_PATH not in current_path.split(os.pathsep):
+        add_windows_path(BIN_PATH)
+        log.info(f"Added {BIN_PATH} to system PATH.")
 
 
 # unused code

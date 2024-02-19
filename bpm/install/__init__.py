@@ -1,6 +1,7 @@
 import io
 import logging as log
 import platform
+import shutil
 import tarfile
 import zipfile
 from pathlib import Path
@@ -12,7 +13,9 @@ import tqdm
 
 import bpm.utils as utils
 
+from pylnk3 import for_file
 from ..search import RepoHandler
+from ..utils.constants import APP_PATH, BIN_PATH
 from ..utils.exceptions import TarPathTraversalException
 
 
@@ -99,6 +102,25 @@ def restore(recorder: Optional[list[str]] = None):
             file.unlink(missing_ok=True)
         log.info(f"deleting {file}")
         rename_old_rev(file)
+
+
+def remove_on_windows(repo: RepoHandler):
+    """
+    Remove a repo on windows
+    """
+    assert platform.system() == "Windows", "This function only works on windows"
+
+    REPO_PATH = APP_PATH / repo.name
+    if utils.TEST:
+        log.debug("dry run: Remove old packages")
+        REPO_PATH.exists() and log.info(f"dry run: Remove repo {REPO_PATH}.")
+        return
+    if REPO_PATH.exists():
+        shutil.rmtree(REPO_PATH)
+        log.info(f"Remove repo {REPO_PATH}.")
+    for file in repo.file_list:
+        Path(file).unlink()
+        log.info(f"Remove symlink {REPO_PATH}.")
 
 
 def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
@@ -198,6 +220,7 @@ def install_on_linux(
 
     `path`: The "main path" dir of files to be installed.
     """
+    assert platform.system() == "Linux", "Not a linux system"
     pkgdst = Path(pkgdst)
 
     def install_to(_from: Path, _to: Path, mode: Optional[int] = None):
@@ -273,6 +296,53 @@ def install_on_linux(
         log.warning("No binary file found, please check the release package.")
 
 
+def install_on_windows(
+    repo: RepoHandler,
+    pkgsrc: Path,
+):
+    """
+    Install files to a windows system.
+    1. move all files to a folder.
+    2. softlink binary files.
+
+    `path`: The "main path" dir of files to be installed.
+    """
+    assert platform.system() == "Windows", "This function only supports Windows."
+    pkgsrc = Path(pkgsrc)
+
+    APP_PATH.mkdir(parents=True, exist_ok=True)
+    BIN_PATH.mkdir(parents=True, exist_ok=True)
+    REPO_PATH = APP_PATH / repo.name
+    remove_on_windows(repo)
+
+    # 1. move all files to a folder.
+    if utils.TEST:
+        pkgdst = pkgsrc
+        log.info(f"dry run: Install package to {REPO_PATH}.")
+    else:
+        pkgdst = Path(shutil.move(pkgsrc, REPO_PATH))
+        log.info(f"Install package to {REPO_PATH}.")
+
+    # 2. softlink binary files.
+    for file in pkgdst.rglob(repo.bin_name):
+        if not file.is_file():
+            continue
+        link_name = file.with_suffix("").name
+        link_path = (BIN_PATH / link_name).with_suffix(".lnk")
+        if utils.TEST:
+            log.info(f"dry run: Create softlink: {file} -> {link_path}")
+        else:
+            if link_path.exists():
+                link_path.unlink()
+            # link_path.symlink_to(file)
+            for_file(str(file), str(link_path))
+            log.info(f"Create softlink: {file} -> {link_path}")
+            repo.installed_files.append(link_path)
+
+    # ensure windows bin path
+    utils.ensure_windows_path()
+
+
 def auto_install(
     repo: RepoHandler,
     pkgsrc: Path,
@@ -287,6 +357,8 @@ def auto_install(
             install_on_linux(
                 pkgsrc, repo.bin_name, repo.one_bin, rename, repo.installed_files
             )
+        case "Windows":
+            install_on_windows(repo, pkgsrc)
         case _:
             raise NotImplementedError(f"{platform.system()} is not supported now.")
 

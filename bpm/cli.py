@@ -7,11 +7,11 @@ parser = argparse.ArgumentParser(
     prog="bpm",
     description="Bin package manager. See https://github.com/lxl66566/bpm for more information.",
 )
-subparsers = parser.add_subparsers(
-    title="subcommands", dest="command", help="action to take"
-)
+subparsers = parser.add_subparsers(title="subcommands", dest="command")
 
-install_parser = subparsers.add_parser("install", aliases=["i"])
+install_parser = subparsers.add_parser(
+    "install", aliases=["i"], help="Install packages."
+)
 install_parser.add_argument("packages", nargs="+", help="Package name to install")
 install_parser.add_argument(
     "-b",
@@ -50,7 +50,7 @@ install_parser.add_argument(
 install_parser.set_defaults(func=cli_install)
 
 
-remove_parser = subparsers.add_parser("remove", aliases=["r"])
+remove_parser = subparsers.add_parser("remove", aliases=["r"], help="Remove packages.")
 remove_parser.add_argument("packages", nargs="+", help="Package names to remove.")
 remove_parser.set_defaults(func=cli_remove)
 
@@ -58,7 +58,7 @@ remove_parser.set_defaults(func=cli_remove)
 # search_parser = subparsers.add_parser("search", aliases=["s"])
 # search_parser.add_argument("packages", nargs="+", help="Package name to search")
 
-update_parser = subparsers.add_parser("update", aliases=["u"])
+update_parser = subparsers.add_parser("update", aliases=["u"], help="Update packages.")
 update_parser.add_argument(
     "packages", nargs="*", help="Package names to update. Update all by default."
 )
