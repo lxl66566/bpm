@@ -46,7 +46,7 @@ def cli_install(args):
                         .map(lambda x: f"`{x}`")
                     )
                     log.info(
-                        f"You can press `Win+r`, type {", ".join(bins)} and Enter to start software.\nIf you want to use it in cmd, add `.lnk` suffix for them."
+                        f"You can press `Win+r`, type {', '.join(bins)} and Enter to start software.\nIf you want to use it in cmd, add `.lnk` suffix for them."
                     )
                 if not args.dry_run:
                     repo_group.insert_repo(repo)
