@@ -10,7 +10,6 @@ from typing import Optional
 
 import requests
 import tqdm
-from pylnk3 import for_file
 
 import bpm.utils as utils
 
@@ -59,7 +58,8 @@ def install(
             rename_old(_to)
         else:
             _to.unlink()
-    _from.replace(_to)
+
+    shutil.copy2(_from, _to)
     log.info(f"{_from} -> {_to}")
     record()
     mode and _to.chmod(mode)
@@ -320,6 +320,9 @@ def install_on_windows(
     `path`: The "main path" dir of files to be installed.
     """
     assert WINDOWS, "This function only supports Windows."
+
+    from pylnk3 import for_file
+
     pkgsrc = Path(pkgsrc)
 
     APP_PATH.mkdir(parents=True, exist_ok=True)
@@ -348,6 +351,7 @@ def install_on_windows(
             if link_path.exists():
                 link_path.unlink()
             # link_path.symlink_to(file)
+
             for_file(str(file), str(link_path))
             log.info(f"Create softlink: {file} -> {link_path}")
             repo.add_file_list(link_path)

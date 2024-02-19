@@ -1,6 +1,8 @@
 class RepoNotFoundError(FileNotFoundError):
     def __init__(self, repo=""):
-        super().__init__(f"Repository{(" '" + repo + "'") if repo else ""} not found.")
+        super().__init__(
+            f"""Repository{(" '" + repo + "'") if repo else ""} not found."""
+        )
 
 
 class AssetNotFoundError(FileNotFoundError):
@@ -16,5 +18,5 @@ class TarPathTraversalException(Exception):
 class LnkNotFoundError(FileNotFoundError):
     def __init__(self, lnk_name: str = ""):
         super().__init__(
-            f"Lnk {(" '" + lnk_name + "'") if lnk_name else ""} not found."
+            f"""Lnk {(" '" + lnk_name + "'") if lnk_name else ""} not found."""
         )
