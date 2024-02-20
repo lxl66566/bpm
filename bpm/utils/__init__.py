@@ -54,6 +54,28 @@ def ensure_windows_path():
         add_windows_path(BIN_PATH)
 
 
+def select_interactive(options: list[str]) -> str:
+    """
+    select an option from a list.
+    """
+    for i, option in enumerate(options):
+        print(f"{i+1}. {option}")
+    while True:
+        try:
+            choice = int(input("Enter your choice: "))
+            if 1 <= choice <= len(options):
+                return options[choice - 1]
+            else:
+                raise ValueError
+        except ValueError:
+            print(
+                f"Invalid choice. Please enter a number between 1 and {len(options)}."
+            )
+        except KeyboardInterrupt:
+            print("Interrupted by user.")
+            exit(0)
+
+
 # unused code
 def with_temp(func):
     @functools.wraps(func)

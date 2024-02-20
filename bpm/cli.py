@@ -51,6 +51,12 @@ install_parser.add_argument(
     action="store_true",
     help="print the install position, but not install actually.",
 )
+install_parser.add_argument(
+    "-i",
+    "--interactive",
+    action="store_true",
+    help="select asset interactively.",
+)
 install_parser.set_defaults(func=cli_install)
 
 

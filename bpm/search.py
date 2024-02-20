@@ -7,8 +7,9 @@ from urllib.parse import urlparse
 
 import requests
 
+from .utils import select_interactive
 from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
-from .utils.exceptions import AssetNotFoundError, RepoNotFoundError
+from .utils.exceptions import AssetNotFoundError, InvalidAssetError, RepoNotFoundError
 
 
 class RepoHandler:
@@ -155,7 +156,7 @@ class RepoHandler:
                 print("Invalid input: please input a valid number.")
                 exit(1)
 
-    def get_asset(self):
+    def get_asset(self, interactive: bool = False):
         """
         get version and filter out which asset link to download
         """
@@ -175,6 +176,11 @@ class RepoHandler:
         self.version = r[0]["tag_name"]
         assets: list[str] = [x["browser_download_url"] for x in r[0]["assets"]]
 
+        if interactive:
+            self.asset = select_interactive(assets)
+            log.info(f"selected asset: {self.asset}")
+            return self
+
         # select
         # 1. platform
         temp = [x for x in assets if platform.system().lower() in x.lower()]
@@ -184,7 +190,7 @@ class RepoHandler:
         elif WINDOWS and "win" not in self.name.lower():
             assets = [x for x in assets if "win" in x.lower()]
             if not assets:
-                raise AssetNotFoundError
+                raise InvalidAssetError
         # 2. architecture
         temp = [x for x in assets if platform.machine().lower() in x.lower()]
         if temp:
@@ -202,7 +208,7 @@ class RepoHandler:
             assets = sorted(assets, key=lambda x: ".tar." not in x)
 
         if not assets:
-            raise AssetNotFoundError
+            raise InvalidAssetError
         self.asset = assets[0]
         log.info(f"selected asset: {self.asset}")
         return self

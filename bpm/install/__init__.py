@@ -342,9 +342,11 @@ def install_on_windows(
         log.info(f"Install package to {REPO_PATH}.")
         repo.add_file_list(REPO_PATH)
 
+    flag = False
     for file in pkgdst.rglob(repo.bin_name):
         if not file.is_file():
             continue
+        flag = True
         link_name = file.with_suffix("").name
         # 2. lnk binary files.
         link_path = (BIN_PATH / link_name).with_suffix(".lnk")
@@ -364,6 +366,8 @@ def install_on_windows(
         repo.add_file_list(cmd_path)
         log.info(f"Create cmd: {file} -> {cmd_path}")
 
+    if not flag:
+        log.warning(f"No binary file found in {pkgdst}.")
     # ensure windows bin path
     utils.ensure_windows_path()
 

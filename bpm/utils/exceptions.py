@@ -5,9 +5,24 @@ class RepoNotFoundError(FileNotFoundError):
         )
 
 
-class AssetNotFoundError(FileNotFoundError):
+class InvalidAssetError(FileNotFoundError):
+    """
+    Has assets, but cannot filter out a valid asset.
+    """
+
     def __init__(self):
-        super().__init__("No available asset found in this repo.")
+        super().__init__(
+            "No available asset found in this repo. If you're sure there's a valid asset, use `--interactive`."
+        )
+
+
+class AssetNotFoundError(FileNotFoundError):
+    """
+    No assets.
+    """
+
+    def __init__(self):
+        super().__init__("This repo has no assets.")
 
 
 class TarPathTraversalException(Exception):

@@ -14,6 +14,9 @@ from .utils.exceptions import RepoNotFoundError
 
 
 def cli_install(args):
+    if args.interactive and args.quiet:
+        log.error("Cannot use both --interactive and --quiet.")
+        exit(1)
     if args.dry_run:
         set_dry_run()
     else:
@@ -22,16 +25,21 @@ def cli_install(args):
         if not args.dry_run and repo_group.find_repo(package)[1]:
             log.info(f"{package} is already installed.")
             continue
-        repo = (
-            RepoHandler(
-                package,
-                prefer_gnu=args.prefer_gnu,
-                one_bin=args.one_bin,
+        try:
+            repo = (
+                RepoHandler(
+                    package,
+                    prefer_gnu=args.prefer_gnu,
+                    one_bin=args.one_bin,
+                )
+                .with_bin_name(args.bin_name)
+                .ask(quiet=args.quiet)
+                .get_asset(interactive=args.interactive)
             )
-            .with_bin_name(args.bin_name)
-            .ask(quiet=args.quiet)
-            .get_asset()
-        )
+        except Exception as e:
+            log.error(f"Failed on searching `{package}`: {e}")
+            trace()
+            exit(1)
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
             main_path = download_and_extract(repo.asset, tmp_dir)
@@ -52,7 +60,7 @@ def cli_install(args):
                     repo_group.insert_repo(repo)
 
             except Exception as e:
-                log.error(f"Failed to install `{repo.name}`: {e}.")
+                log.error(f"Failed to install `{repo.name}`: {e}")
                 trace()
                 log.error("Restoring...")
                 # rollback.
