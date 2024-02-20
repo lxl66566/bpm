@@ -1,4 +1,5 @@
 import bisect
+import logging as log
 import pickle
 from contextlib import suppress
 from pathlib import Path
@@ -8,7 +9,7 @@ from typing import Optional
 
 from .search import RepoHandler
 from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, WINDOWS
-from .utils.exceptions import LnkNotFoundError, RepoNotFoundError
+from .utils.exceptions import RepoNotFoundError
 
 
 class RepoGroup:
@@ -75,17 +76,31 @@ class RepoGroup:
         else:
             raise RepoNotFoundError(getattr(repo, "name", repo))
 
-    def alias_lnk(self, old_path: Path, new_path: Path):
-        assert WINDOWS, "alias is not supported on non-Windows systems"
+    def alias_lnk(self, old_name: str, new_name: str):
+        """
+        Find `old_name` in all repo_group's `file_list`, and change the lnk and cmd name to `new_name`.
+
+        Note that the `old_name` and `new_name` should not include suffix.
+        """
+        assert WINDOWS, "alias is not supported on non-Windows systems."
+
+        # only change two files: lnk, cmd
+        count = 0
         for repo in self.repos:
             for i, s in enumerate(repo.installed_files):
                 s = Path(s)
-                if s == old_path:
+                assert s.exists(), "file not found: " + s
+                if s.stem == old_name and s.suffix in (".lnk", ".cmd"):
+                    assert not s.is_dir()
+                    new_path = s.with_stem(new_name)
                     s.replace(new_path)
                     repo.installed_files[i] = str(new_path)
+                    count += 1
+                if count >= 2:
                     self.save()
                     return
-        raise LnkNotFoundError(str(old_path))
+        log.error("You may need to update bpm to >= 2.1.0.")
+        exit(1)
 
 
 import unittest  # noqa: E402

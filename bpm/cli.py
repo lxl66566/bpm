@@ -7,7 +7,11 @@ parser = argparse.ArgumentParser(
     prog="bpm",
     description="Bin package manager. See https://github.com/lxl66566/bpm for more information.",
 )
-subparsers = parser.add_subparsers(title="subcommands", dest="command")
+subparsers = parser.add_subparsers(
+    title="subcommands",
+    dest="command",
+    help="You can use 'bpm <subcommand> -h' to get more infomation.",
+)
 
 install_parser = subparsers.add_parser(
     "install", aliases=["i"], help="Install packages."

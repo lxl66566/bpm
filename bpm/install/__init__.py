@@ -106,7 +106,8 @@ def restore(recorder: Optional[list[str]] = None):
 
 def remove_on_windows(recorder: Optional[list[str]] = None):
     """
-    Remove a repo on windows
+    Remove a repo on windows.
+    It will delete all given files and folders.
     """
     assert WINDOWS, "This function only works on windows"
     if not recorder:
@@ -116,13 +117,14 @@ def remove_on_windows(recorder: Optional[list[str]] = None):
         if utils.TEST:
             log.info(f"dry run: Remove {file}.")
             continue
+        # all bpm data should be stored inside CONF_PATH.
         assert file.is_relative_to(CONF_PATH), f"UNSAFE REMOVE! try to remove: {file}"
         if file.is_dir():
             shutil.rmtree(file)
             log.info(f"Remove dir {file}.")
         else:
             file.unlink()
-            log.info(f"Remove symlink {file}.")
+            log.info(f"Remove lnk {file}.")
 
 
 def remove(recorder: Optional[list[str]] = None):
@@ -315,7 +317,8 @@ def install_on_windows(
     """
     Install files to a windows system.
     1. move all files to a folder.
-    2. softlink binary files.
+    2. make lnk for GUI binary files.
+    3. make a cmd for CLI binary files.
 
     `path`: The "main path" dir of files to be installed.
     """
@@ -339,22 +342,27 @@ def install_on_windows(
         log.info(f"Install package to {REPO_PATH}.")
         repo.add_file_list(REPO_PATH)
 
-    # 2. softlink binary files.
     for file in pkgdst.rglob(repo.bin_name):
         if not file.is_file():
             continue
         link_name = file.with_suffix("").name
+        # 2. lnk binary files.
         link_path = (BIN_PATH / link_name).with_suffix(".lnk")
+        cmd_path = (BIN_PATH / link_name).with_suffix(".cmd")
         if utils.TEST:
-            log.info(f"dry run: Create softlink: {file} -> {link_path}")
-        else:
-            if link_path.exists():
-                link_path.unlink()
-            # link_path.symlink_to(file)
+            log.info(f"dry run: Create lnk: {file} -> {link_path}")
+            log.info(f"dry run: Create cmd: {file} -> {cmd_path}")
+            continue
+        link_path.exists() and link_path.unlink()
+        cmd_path.exists() and cmd_path.unlink()
 
-            for_file(str(file), str(link_path))
-            log.info(f"Create softlink: {file} -> {link_path}")
-            repo.add_file_list(link_path)
+        for_file(str(file), str(link_path))
+        repo.add_file_list(link_path)
+        log.info(f"Create lnk: {file} -> {link_path}")
+
+        cmd_path.write_text(f"""@echo off\n"{file.absolute()}" %*""")
+        repo.add_file_list(cmd_path)
+        log.info(f"Create cmd: {file} -> {cmd_path}")
 
     # ensure windows bin path
     utils.ensure_windows_path()

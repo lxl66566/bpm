@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bin-package-manager"
-version = "2.0.2"
+version = "2.1.0"
 description = "Bin package manager, a package manager based on Github release"
 authors = ["lxl66566 <lxl66566@gmail.com>"]
 license = "MIT"

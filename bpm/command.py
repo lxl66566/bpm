@@ -46,7 +46,7 @@ def cli_install(args):
                         .map(lambda x: f"`{x}`")
                     )
                     log.info(
-                        f"You can press `Win+r`, type {', '.join(bins)} and Enter to start software.\nIf you want to use it in cmd, add `.lnk` suffix for them."
+                        f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
                     )
                 if not args.dry_run:
                     repo_group.insert_repo(repo)
@@ -120,6 +120,7 @@ def cli_update(args):
             _, repo = repo_group.find_repo(name)
             if repo:
                 update(repo)
+                repo_group.save()
             else:
                 failed.append(name)
                 log.error(f"Package `{name}` not found.")
@@ -142,17 +143,19 @@ def cli_info(args):
 
 def cli_alias(args):
     assert WINDOWS, "Alias command is only supported on Windows."
+    assert (
+        args.old_name != args.new_name
+    ), "Alias name cannot be the same as the original."
 
-    def lnk_deal(n):
-        return n.rstrip(".lnk") + ".lnk"
-
-    args.old_name = lnk_deal(args.old_name)
-    args.new_name = lnk_deal(args.new_name)
-    file = list(BIN_PATH.glob(args.old_name))
+    file = list(BIN_PATH.glob(args.old_name + "*"))
     if not file:
         log.error(f"Lnk `{args.old_name}` not found.")
         exit(1)
-    assert len(file) == 1, "Found multiple binaries with the same name."
-    file = file[0]
-    repo_group.alias_lnk(file, BIN_PATH / args.new_name)
+    if len(file) > 1:
+        name = file[0].with_suffix("")
+        assert name == file[1].with_suffix(
+            ""
+        ), "Both lnk should point to the same file."
+
+    repo_group.alias_lnk(args.old_name, args.new_name)
     log.info(f"Alias `{args.old_name}` to `{args.new_name}`.")
