@@ -416,7 +416,7 @@ class Test(unittest.TestCase):
             test2.mkdir()
             file = test1 / "file"
             file.write_text("Hello")
-            subfile = test1 / "folder/subfile"
+            subfile = test1 / "folder" / "subfile"
             subfile.parent.mkdir(parents=True)
             subfile.write_text("World")
             overwrite1 = test1 / "overwrite"

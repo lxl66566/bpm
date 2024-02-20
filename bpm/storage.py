@@ -118,12 +118,12 @@ class Test(unittest.TestCase):
             test_group.repos.clear()
             # read
             test_group.read()
-            self.assertEqual(
+            self.assertListEqual(
                 ["abc", "test_repo", "z"], [r.name for r in test_group.repos]
             )
             # remove
             test_group.remove_repo("test_repo")
-            self.assertEqual(["abc", "z"], [r.name for r in test_group.repos])
+            self.assertListEqual(["abc", "z"], [r.name for r in test_group.repos])
 
 
 if __name__ == "__main__":

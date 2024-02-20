@@ -1,9 +1,11 @@
 import logging as log
 import platform
+import posixpath
+import sys
 from functools import reduce
 from pprint import pprint
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import requests
 
@@ -58,7 +60,9 @@ class RepoHandler:
         if not self.repo_name or not self.repo_owner:
             log.warning("repo_name and repo_owner must be set")
             return None
-        return f"https://{self.site}.com/{self.repo_owner}/{self.repo_name}"
+        return urljoin(
+            f"https://{self.site}.com/", posixpath.join(self.repo_owner, self.repo_name)
+        )
 
     @property
     def api_base(self):
@@ -98,7 +102,7 @@ class RepoHandler:
         get the 5 top repos to download
         """
         r = requests.get(
-            f"{self.api_base}/search/repositories",
+            urljoin(self.api_base, posixpath.join("search", "repositories")),
             params={
                 "q": f"{self.name} in:name",
                 "sort": "stars",
@@ -149,11 +153,12 @@ class RepoHandler:
                 exit(0)
             except IndexError:
                 print(
-                    f"Invalid input: the number should not be more than {OPTION_REPO_NUM}"
+                    f"Invalid input: the number should not be more than {OPTION_REPO_NUM}",
+                    file=sys.stderr,
                 )
                 exit(1)
             except ValueError:
-                print("Invalid input: please input a valid number.")
+                print("Invalid input: please input a valid number.", file=sys.stderr)
                 exit(1)
 
     def get_asset(self, interactive: bool = False):
@@ -161,7 +166,11 @@ class RepoHandler:
         get version and filter out which asset link to download
         """
         assert self.url is not None, "use ask() before get_asset"
-        api = f"{self.api_base}/repos/{self.repo_owner}/{self.repo_name}/releases"
+        api = urljoin(
+            self.api_base,
+            posixpath.join("repos", self.repo_owner, self.repo_name, "releases"),
+        )
+
         r: list = requests.get(api).json()
         log.debug(f"asset api: {api}")
         if not isinstance(r, list):
@@ -247,7 +256,7 @@ class Test(unittest.TestCase):
 
     def test_get_filelist(self):
         test = RepoHandler("eza").set(installed_files=["a", "b", "a", "c"])
-        self.assertEqual(test.file_list, ["a", "b", "c"])
+        self.assertListEqual(test.file_list, ["a", "b", "c"])
 
     def test_parse_url(self):
         test = RepoHandler("yazi").set_url("https://github.com/sxyazi/yazi")
