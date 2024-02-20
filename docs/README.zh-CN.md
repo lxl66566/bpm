@@ -53,7 +53,7 @@ pipx 仅会为当前用户安装，因此需要使用 `sudo pipx`。或者，您
 
 如果您不希望使用 pipx，也可以下载并使用源码。
 
-BPM 依赖 Python 模块：`requests`, `tqdm`，`py7zr`（可选的），请手动安装。
+BPM 依赖[这些库](../requirements.txt)，请手动安装。
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git
@@ -81,7 +81,7 @@ BPM 会自动为已存在的文件添加 `.old` 后缀，以避免覆盖。卸�
 
 ### Windows
 
-BPM 下载文件夹到 `%userprofile%/bpm/app/<name>` 中，并为可执行文件创建快捷方式到 `%userprofile%/bpm/bin`，这个位置会被添加到 `%path%` 中。
+BPM 下载文件夹到 `%userprofile%/bpm/app/<name>` 中，并为可执行文件创建快捷方式与 cmd 到 `%userprofile%/bpm/bin`，这个位置会被添加到 `%path%` 中。
 
 ## 开发
 

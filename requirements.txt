@@ -1,0 +1,5 @@
+py7zr ; sys_platform == "win32"
+pylnk3==0.4.2 ; sys_platform == "win32"
+requests
+simpleufcs==1.0.0
+tqdm

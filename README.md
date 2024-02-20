@@ -53,7 +53,7 @@ pipx will only install for the current user, so `sudo` is required. Alternativel
 
 If you don't want to use pipx, you can also download and use the source code.
 
-BPM depends on Python modules: `requests`, `tqdm`, `py7zr` (optional), please install them manually.
+BPM requires [these libs](./requirements.txt), please install them manually.
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git
@@ -81,7 +81,7 @@ BPM automatically adds the `.old` suffix to existing files to avoid overwrite. T
 
 ### Windows
 
-BPM downloads asset into `%userprofile%/bpm/app/<name>` and creates shortcuts for the executables to `%userprofile%/bpm/bin`, which is added to `%path%`.
+BPM downloads asset into `%userprofile%/bpm/app/<name>` and creates shortcuts and cmd runner for the executables to `%userprofile%/bpm/bin`, which is added to `%path%`.
 
 ## Develop
 
