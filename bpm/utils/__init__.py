@@ -1,10 +1,11 @@
 import functools
 import logging as log
 import os
+import posixpath
 import sys
 import tempfile
 import traceback
-from pathlib import Path
+from pathlib import Path, WindowsPath
 
 from ..lib.windowspathadder import add_windows_path
 from .constants import BIN_PATH, LINUX, WINDOWS
@@ -76,6 +77,19 @@ def select_interactive(options: list[str]) -> str:
             exit(0)
 
 
+def windows_path_to_windows_bash(p: WindowsPath | str) -> str:
+    """
+    convert a windows path to posix path string. example:
+
+    >>> windows_path_to_windows_bash("C:\\Users\\lxl\\bpm\\bin")
+    "/c/Users/lxl/bpm/bin"
+    """
+    p = WindowsPath(p)
+    return posixpath.join(
+        "/", p.drive.rstrip(":").lower(), p.relative_to(p.anchor).as_posix()
+    )
+
+
 # unused code
 def with_temp(func):
     @functools.wraps(func)
@@ -108,6 +122,12 @@ class Test(unittest.TestCase):
         self.assertTrue(multi_in(["win", "windo"], "windals"))
         self.assertTrue(multi_in("123", "1234"))
         self.assertFalse(multi_in(["13", "14"], "1234"))
+
+    def test_windows_path_to_windows_bash(self):
+        self.assertEqual(
+            windows_path_to_windows_bash(r"C:\Users\lxl\bpm\bin"),
+            "/c/Users/lxl/bpm/bin",
+        )
 
 
 if __name__ == "__main__":

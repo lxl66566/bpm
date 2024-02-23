@@ -89,18 +89,20 @@ class RepoGroup:
         for repo in self.repos:
             for i, s in enumerate(repo.installed_files):
                 s = Path(s)
-                assert s.exists(), "file not found: " + s
-                if s.stem == old_name and s.suffix in (".lnk", ".cmd"):
-                    assert not s.is_dir()
+                assert s.exists(), "file in installed_list not found: " + s
+                if s.is_dir():
+                    continue
+                if s.stem == old_name and s.suffix in (".lnk", ".cmd", ""):
                     new_path = s.with_stem(new_name)
                     s.replace(new_path)
                     repo.installed_files[i] = str(new_path)
                     count += 1
-                if count >= 2:
                     self.save()
+                if count >= 3:
                     return
-        log.error("You may need to update bpm to >= 2.1.0.")
-        exit(1)
+        log.warning(
+            "You can update bpm and reinstall softwares to get cmd and sh support."
+        )
 
 
 import unittest  # noqa: E402

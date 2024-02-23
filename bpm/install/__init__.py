@@ -124,7 +124,7 @@ def remove_on_windows(recorder: Optional[list[str]] = None):
             log.info(f"Remove dir {file}.")
         else:
             file.unlink()
-            log.info(f"Remove lnk {file}.")
+            log.info(f"Remove {file}.")
 
 
 def remove(recorder: Optional[list[str]] = None):
@@ -319,6 +319,7 @@ def install_on_windows(
     1. move all files to a folder.
     2. make lnk for GUI binary files.
     3. make a cmd for CLI binary files.
+    4. make a bash script for using in windows bash.
 
     `path`: The "main path" dir of files to be installed.
     """
@@ -348,15 +349,18 @@ def install_on_windows(
             continue
         flag = True
         link_name = file.with_suffix("").name
-        # 2. lnk binary files.
+        # 234. lnk binary files.
         link_path = (BIN_PATH / link_name).with_suffix(".lnk")
         cmd_path = (BIN_PATH / link_name).with_suffix(".cmd")
+        sh_path = (BIN_PATH / link_name).with_suffix("")
         if utils.TEST:
             log.info(f"dry run: Create lnk: {file} -> {link_path}")
             log.info(f"dry run: Create cmd: {file} -> {cmd_path}")
+            log.info(f"dry run: Create sh: {file} -> {cmd_path}")
             continue
         link_path.exists() and link_path.unlink()
         cmd_path.exists() and cmd_path.unlink()
+        sh_path.exists() and sh_path.unlink()
 
         for_file(str(file), str(link_path))
         repo.add_file_list(link_path)
@@ -365,6 +369,12 @@ def install_on_windows(
         cmd_path.write_text(f"""@echo off\n"{file.absolute()}" %*""")
         repo.add_file_list(cmd_path)
         log.info(f"Create cmd: {file} -> {cmd_path}")
+
+        sh_path.write_text(
+            f"""#!/bin/sh\n"{utils.windows_path_to_windows_bash(file)}" $@"""
+        )
+        repo.add_file_list(sh_path)
+        log.info(f"Create sh: {file} -> {sh_path}")
 
     if not flag:
         log.warning(f"No binary file found in {pkgdst}.")
