@@ -3,6 +3,13 @@ import sys
 
 from .command import cli_alias, cli_info, cli_install, cli_remove, cli_update
 
+
+def value_in(value, in_list):
+    if value not in in_list:
+        raise argparse.ArgumentTypeError(f"`{value}` is not in {in_list}")
+    return value
+
+
 parser = argparse.ArgumentParser(
     prog="bpm",
     description="Bin package manager. See https://github.com/lxl66566/bpm for more information.",
@@ -22,6 +29,13 @@ install_parser.add_argument(
     "--bin-name",
     nargs="?",
     help="specify the binary executable filename, otherwise use package name by default.",
+)
+install_parser.add_argument(
+    "-l",
+    "--local",
+    nargs="?",
+    metavar="Archive",
+    help="install from local archive.",
 )
 install_parser.add_argument(
     "-q",
@@ -57,11 +71,24 @@ install_parser.add_argument(
     action="store_true",
     help="select asset interactively.",
 )
+install_parser.add_argument(
+    "--sort",
+    nargs="?",
+    type=lambda value: value_in(
+        value, ["stars", "forks", "help-wanted-issues", "updated"]
+    ),
+    help="sort param in github api, use `best-match` by default. The value could be `stars`, `forks`, `help-wanted-issues`, `updated`.",
+)
 install_parser.set_defaults(func=cli_install)
 
 
 remove_parser = subparsers.add_parser("remove", aliases=["r"], help="Remove packages.")
 remove_parser.add_argument("packages", nargs="+", help="Package names to remove.")
+remove_parser.add_argument(
+    "--soft",
+    action="store_true",
+    help="only remove item in database, do not delete softwares themselves.",
+)
 remove_parser.set_defaults(func=cli_remove)
 
 # not support search, temporarily

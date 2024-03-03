@@ -58,7 +58,6 @@ class RepoHandler:
     @property
     def url(self) -> Optional[str]:
         if not self.repo_name or not self.repo_owner:
-            log.warning("repo_name and repo_owner must be set")
             return None
         return urljoin(
             f"https://{self.site}.com/", posixpath.join(self.repo_owner, self.repo_name)
@@ -97,18 +96,23 @@ class RepoHandler:
         self.repo_name = r[1]
         return self
 
-    def search(self, page=1) -> Optional[list[str]]:
+    def search(self, page=1, sort=None) -> Optional[list[str]]:
         """
         get the 5 top repos to download
+
+        `sort`: sort the search result. Use best-match by default.
+            More info: https://docs.github.com/rest/search/search?apiVersion=2022-11-28#search-repositories
         """
+        params = {
+            "q": f"{self.name} in:name",
+            "page": page,
+            "per_page": OPTION_REPO_NUM,
+        }
+        if sort:
+            params["sort"] = sort
         r = requests.get(
             urljoin(self.api_base, posixpath.join("search", "repositories")),
-            params={
-                "q": f"{self.name} in:name",
-                "sort": "stars",
-                "page": page,
-                "per_page": OPTION_REPO_NUM,
-            },
+            params=params,
         )
 
         if r.status_code == 200:
@@ -120,14 +124,14 @@ class RepoHandler:
         else:
             r.raise_for_status()
 
-    def ask(self, quiet: bool = False):
+    def ask(self, quiet: bool = False, sort=None):
         """
         ask what repo to install.
         please call `search()` before ask.
         """
         page = 1
         while True:
-            repo_selections = self.search(page)
+            repo_selections = self.search(page, sort)
             if not repo_selections:
                 raise RepoNotFoundError
             if quiet:

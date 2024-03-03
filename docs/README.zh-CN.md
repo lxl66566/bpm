@@ -97,3 +97,4 @@ poetry run python -m unittest bpm/**/*.py  # 运行测试
 - [ ] no pre release
 - [x] try install
 - [x] windows support
+- [x] offline install

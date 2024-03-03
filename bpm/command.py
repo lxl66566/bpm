@@ -1,14 +1,13 @@
 import logging as log
-import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from simpleufcs import UFCS
 
-from .install import auto_install, download_and_extract, remove
+from .install import auto_install, download_and_extract, extract, remove
 from .search import RepoHandler
 from .storage import repo_group
-from .utils import check_root, set_dry_run, trace
+from .utils import check_root, error_exit, set_dry_run, trace
 from .utils.constants import BIN_PATH, WINDOWS
 from .utils.exceptions import RepoNotFoundError
 
@@ -21,29 +20,38 @@ def cli_install(args):
         set_dry_run()
     else:
         check_root()
+    if args.local and len(args.packages) > 1:
+        log.error(
+            "Cannot install multiple packages from local. Please install them separately."
+        )
+        exit(1)
     for package in args.packages:
         if not args.dry_run and repo_group.find_repo(package)[1]:
             log.info(f"{package} is already installed.")
             continue
         try:
-            repo = (
-                RepoHandler(
-                    package,
-                    prefer_gnu=args.prefer_gnu,
-                    one_bin=args.one_bin,
+            repo = RepoHandler(
+                package,
+                prefer_gnu=args.prefer_gnu,
+                one_bin=args.one_bin,
+            ).with_bin_name(args.bin_name)
+            if not args.local:
+                repo = repo.ask(quiet=args.quiet, sort=args.sort).get_asset(
+                    interactive=args.interactive
                 )
-                .with_bin_name(args.bin_name)
-                .ask(quiet=args.quiet)
-                .get_asset(interactive=args.interactive)
-            )
+
         except Exception as e:
             log.error(f"Failed on searching `{package}`: {e}")
             trace()
             exit(1)
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
-            main_path = download_and_extract(repo.asset, tmp_dir)
             try:
+                if args.local:
+                    with Path(args.local).open("rb") as f:
+                        main_path = extract(f, tmp_dir)
+                else:
+                    main_path = download_and_extract(repo.asset, tmp_dir)
                 auto_install(repo, main_path, rename=True)
                 log.info(f"Successfully installed `{repo.name}`.")
                 if WINDOWS:
@@ -65,8 +73,7 @@ def cli_install(args):
                 log.error("Restoring...")
                 # rollback.
                 remove(repo.file_list)
-                log.error("Files restored.")
-                sys.exit("Exiting...")
+                error_exit("Files restored. Exiting...")
 
 
 def cli_remove(args):
@@ -79,8 +86,10 @@ def cli_remove(args):
             failed.append(package)
             continue
         try:
-            log.info(f"Removing `{package}`...")
-            remove(repo.file_list)
+            log.info(
+                f"""Removing `{package}`{" in soft mode" if args.soft else ""}..."""
+            )
+            args.soft or remove(repo.file_list)
             repo_group.remove_repo(package)
         except Exception as e:
             failed.append(package)
@@ -92,7 +101,7 @@ def cli_remove(args):
         f"Removing complete. Total: {len(args.packages)}, Success: {len(args.packages)-len(failed)}"
     )
     if failed:
-        log.info(f"Failed: {failed}")
+        log.info(f"Failed list: {failed}")
 
 
 def cli_update(args):

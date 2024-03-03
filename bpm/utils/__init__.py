@@ -32,6 +32,22 @@ def check_root():
         sys.exit("You need to have root privileges to run this command.")
 
 
+def error_exit(msg: str):
+    """
+    Exit with error message.
+    """
+    log.error(msg)
+    sys.exit(1)
+
+
+def assert_exit(condition: bool, msg: str):
+    """
+    Exit with error message if condition is not met.
+    """
+    if not condition:
+        error_exit(msg)
+
+
 def trace():
     """
     Trace back only in debug mode.
@@ -112,6 +128,10 @@ def with_temp(func):
 
 
 def with_test(func):
+    """
+    enable TEST global var only in this function.
+    """
+
     @functools.wraps(func)
     def warpper(*args, **kwargs):
         global TEST
