@@ -370,8 +370,15 @@ def install_on_windows(
         repo.add_file_list(cmd_path)
         log.info(f"Create cmd: {file} -> {cmd_path}")
 
-        sh_path.write_text(
-            f"""#!/bin/sh\n"{utils.windows_path_to_windows_bash(file)}" $@"""
+        # needs LF for WSL
+        sh_path.write_bytes(
+            f"""#!/bin/sh
+if [ "$(uname)" != "Linux" ]; then
+    "{utils.windows_path_to_windows_bash(file)}" $@
+else
+    "{utils.windows_path_to_wsl(file)}" $@
+fi
+""".encode()
         )
         repo.add_file_list(sh_path)
         log.info(f"Create sh: {file} -> {sh_path}")

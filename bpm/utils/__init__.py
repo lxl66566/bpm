@@ -90,6 +90,17 @@ def windows_path_to_windows_bash(p: WindowsPath | str) -> str:
     )
 
 
+def windows_path_to_wsl(p: WindowsPath | str) -> str:
+    """
+    convert a windows path to wsl path string. example:
+
+    >>> windows_path_to_wsl("C:\\Users\\lxl\\bpm\\bin")
+    "/mnt/c/Users/lxl/bpm/bin"
+    """
+
+    return posixpath.join("/mnt", windows_path_to_windows_bash(p).lstrip("/"))
+
+
 # unused code
 def with_temp(func):
     @functools.wraps(func)
@@ -123,10 +134,14 @@ class Test(unittest.TestCase):
         self.assertTrue(multi_in("123", "1234"))
         self.assertFalse(multi_in(["13", "14"], "1234"))
 
-    def test_windows_path_to_windows_bash(self):
+    def test_windows_path_convert(self):
         self.assertEqual(
             windows_path_to_windows_bash(r"C:\Users\lxl\bpm\bin"),
             "/c/Users/lxl/bpm/bin",
+        )
+        self.assertEqual(
+            windows_path_to_wsl(r"C:\Users\lxl\bpm\bin"),
+            "/mnt/c/Users/lxl/bpm/bin",
         )
 
 
