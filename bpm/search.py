@@ -2,6 +2,7 @@ import logging as log
 import platform
 import posixpath
 import sys
+from enum import Enum
 from functools import reduce
 from pprint import pprint
 from typing import Optional
@@ -12,6 +13,73 @@ import requests
 from .utils import select_interactive
 from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from .utils.exceptions import AssetNotFoundError, InvalidAssetError, RepoNotFoundError
+
+
+class Combination(Enum):
+    """
+    Enum for the different ways of combining the select_list and prompt.
+    """
+
+    ALL = 0
+    ANY = 1
+
+
+def select_list(
+    select_list: list[str],
+    prompts: list[str],
+    combination: Combination = Combination.ALL,
+    case_sensitive=False,
+) -> list[str]:
+    """
+    Selects items from the given list and return.
+    if no item were found, return the origin list, so the return list will not be empty.
+
+    :param combination: ALL => every prompt should in the word, ANY => one or more prompt in the word.
+
+    >>> select_list(["12", "13", "23"], ["1"])
+    ['12', '13']
+    >>> select_list(["12", "13", "23", "34"], ["1", "2"], Combination.ANY)
+    ['12', '13', '23']
+    >>> select_list(["12", "13", "23", "34", "21"], ["1", "2"], Combination.ALL)
+    ['12', '21']
+    """
+    comb_func = any if combination == Combination.ANY else all
+    is_valid = lambda s: comb_func(  # noqa: E731
+        map(
+            (lambda x: x in s)
+            if case_sensitive
+            else (lambda x: x.lower() in s.lower()),
+            prompts,
+        )
+    )
+    return list(filter(is_valid, select_list)) or select_list
+
+
+def sort_list(
+    sort_list: list[str],
+    prompts: list[str],
+    combination: Combination = Combination.ALL,
+    case_sensitive=False,
+) -> list[str]:
+    """
+    Sort items from the given list and return.
+
+    :param combination: ALL => every prompt should in the word, ANY => one or more prompt in the word.
+
+
+    >>> sort_list(["12", "13", "23"], ["2"])
+    ['12', '23', '13']
+    """
+    comb_func = any if combination == Combination.ANY else all
+    is_valid = lambda s: comb_func(  # noqa: E731
+        map(
+            (lambda x: x not in s)
+            if case_sensitive
+            else (lambda x: x.lower() not in s.lower()),
+            prompts,
+        )
+    )
+    return sorted(sort_list, key=is_valid)
 
 
 class RepoHandler:
@@ -181,7 +249,6 @@ class RepoHandler:
             log.error(f"repo {self.repo_owner}/{self.repo_name} not found.")
             raise RepoNotFoundError
 
-        r = r[:25]  # only gets the front 25 results.
         r = list(filter(lambda x: bool(x["assets"]), r))
         if len(r) == 0:
             raise AssetNotFoundError
@@ -196,21 +263,19 @@ class RepoHandler:
 
         # select
         # 1. platform
-        temp = [x for x in assets if platform.system().lower() in x.lower()]
-        if temp:
-            assets = temp
-        # windows maybe use `win` instead of `windows`
-        elif WINDOWS and "win" not in self.name.lower():
-            assets = [x for x in assets if "win" in x.lower()]
-            if not assets:
-                raise InvalidAssetError
+        if WINDOWS and "win" not in self.name.lower():
+            pltfm = [platform.system().lower(), "win"]
+        assets = select_list(assets, pltfm, Combination.ANY)
         # 2. architecture
-        temp = [x for x in assets if platform.machine().lower() in x.lower()]
-        if temp:
-            assets = temp
+        arch = (
+            [platform.machine().lower()]
+            if platform.machine().lower() != "amd64"
+            else ["amd64", "x86_64"]
+        )
+        assets = select_list(assets, arch, Combination.ANY)
         # 3. musl or gnu
         if not self.prefer_gnu:
-            assets = sorted(assets, key=lambda x: "musl" not in x)
+            assets = sort_list(assets, ["musl"])
         # 4. tar, zip, 7z, other
         assets = sorted(assets, key=lambda x: not x.endswith(".7z"))
         if WINDOWS:
@@ -269,4 +334,7 @@ class Test(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    import doctest
+
     unittest.main()
+    doctest.testmod()

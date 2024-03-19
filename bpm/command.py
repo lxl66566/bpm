@@ -166,7 +166,7 @@ def cli_alias(args):
 
     file = list(BIN_PATH.glob(args.old_name + "*"))
     if not file:
-        log.error(f"Lnk `{args.old_name}` not found.")
+        log.error(f"Script `{args.old_name}` not found.")
         exit(1)
     if len(file) > 1:
         name = file[0].with_suffix("")

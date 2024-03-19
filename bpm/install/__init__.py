@@ -163,7 +163,10 @@ def extract(buffer: io.BytesIO, to_dir: Path) -> Path:
             with zipfile.ZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
         except zipfile.BadZipFile:
-            import py7zr
+            try:
+                import py7zr
+            except ImportError:
+                utils.error_exit("cannot extract 7z file without py7zr module.")
 
             with py7zr.SevenZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
