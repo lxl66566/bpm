@@ -4,6 +4,7 @@ import platform
 import shutil
 import tarfile
 import zipfile
+from contextlib import suppress
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
@@ -266,14 +267,17 @@ def install_on_linux(
         if not path.is_dir():
             log.warning(f"trying to install {path} as completions: not a directory")
             return
-        for file in path.rglob("*.fish"):
-            # $fish_complete_path
-            install_to(file, pkgdst / "share/fish/vendor_completions.d")
-        for file in path.rglob("*.bash"):
-            install_to(file, pkgdst / "share/bash-completion/completions")
-        for file in path.rglob("_*"):
-            if "zsh" in file.read_text():
-                install_to(file, pkgdst / "share/zsh/site-functions")
+        with suppress():
+            for file in path.rglob("*.fish"):
+                # $fish_complete_path
+                install_to(file, pkgdst / "share/fish/vendor_completions.d")
+        with suppress():
+            for file in path.rglob("*.bash"):
+                install_to(file, pkgdst / "share/bash-completion/completions")
+        with suppress():
+            for file in path.rglob("_*"):
+                if "zsh" in file.read_text():
+                    install_to(file, pkgdst / "share/zsh/site-functions")
 
     first_layer: list[Path] = list(path.glob("*"))
     assert first_layer, f"{path} is empty"
