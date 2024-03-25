@@ -155,6 +155,8 @@ class Test(unittest.TestCase):
         self.assertFalse(multi_in(["13", "14"], "1234"))
 
     def test_windows_path_convert(self):
+        if not WINDOWS:
+            return
         self.assertEqual(
             windows_path_to_windows_bash(r"C:\Users\lxl\bpm\bin"),
             "/c/Users/lxl/bpm/bin",

@@ -263,8 +263,11 @@ class RepoHandler:
 
         # select
         # 1. platform
-        if WINDOWS and "win" not in self.name.lower():
-            pltfm = [platform.system().lower(), "win"]
+        pltfm = (
+            [platform.system().lower(), "win"]
+            if WINDOWS and "win" not in self.name.lower()
+            else [platform.system().lower()]
+        )
         assets = select_list(assets, pltfm, Combination.ANY)
         # 2. architecture
         arch = (

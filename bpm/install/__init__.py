@@ -267,14 +267,14 @@ def install_on_linux(
         if not path.is_dir():
             log.warning(f"trying to install {path} as completions: not a directory")
             return
-        with suppress():
+        with suppress(FileNotFoundError):
             for file in path.rglob("*.fish"):
                 # $fish_complete_path
                 install_to(file, pkgdst / "share/fish/vendor_completions.d")
-        with suppress():
+        with suppress(FileNotFoundError):
             for file in path.rglob("*.bash"):
                 install_to(file, pkgdst / "share/bash-completion/completions")
-        with suppress():
+        with suppress(FileNotFoundError):
             for file in path.rglob("_*"):
                 if "zsh" in file.read_text():
                     install_to(file, pkgdst / "share/zsh/site-functions")

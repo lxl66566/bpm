@@ -1,3 +1,8 @@
 import logging
+import os
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+LOGLEVEL = os.environ.get("DEBUG")
+logging.basicConfig(
+    format="%(levelname)s: %(message)s",
+    level=logging.INFO if not LOGLEVEL else logging.DEBUG,
+)
