@@ -105,27 +105,39 @@ def restore(recorder: Optional[list[str]] = None):
         rename_old_rev(file)
 
 
-def remove_on_windows(recorder: Optional[list[str]] = None):
+def remove_on_windows(recorder: Optional[list[str]] = None, partial: bool = False):
     """
     Remove a repo on windows.
     It will delete all given files and folders.
+
+    :param partial: Only remove the install folder, not scripts.
     """
     assert WINDOWS, "This function only works on windows"
-    if not recorder:
+
+    if utils.TEST:
+        for file in recorder or []:
+            log.info(f"dry run: Remove {file}.")
         return
 
-    for file in map(lambda x: Path(x), reversed(recorder)):
-        if utils.TEST:
-            log.info(f"dry run: Remove {file}.")
-            continue
+    new_recorder = []
+
+    while recorder:
+        file = Path(recorder.pop())
         # all bpm data should be stored inside CONF_PATH.
-        assert file.is_relative_to(CONF_PATH), f"UNSAFE REMOVE! try to remove: {file}"
+        assert file.is_relative_to(
+            CONF_PATH
+        ), f"UNSAFE REMOVE! trying to remove: {file}"
+
         if file.is_dir():
             shutil.rmtree(file)
             log.info(f"Remove dir {file}.")
-        else:
+        elif not partial:
             file.unlink()
             log.info(f"Remove {file}.")
+        else:
+            new_recorder.append(file)
+
+    recorder = reversed(new_recorder)
 
 
 def remove(recorder: Optional[list[str]] = None):
@@ -339,7 +351,7 @@ def install_on_windows(
     APP_PATH.mkdir(parents=True, exist_ok=True)
     BIN_PATH.mkdir(parents=True, exist_ok=True)
     REPO_PATH = APP_PATH / repo.name
-    remove_on_windows(repo.file_list)
+    remove_on_windows(repo.file_list, True)
 
     # 1. move all files to a folder.
     if utils.TEST:
