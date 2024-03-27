@@ -282,14 +282,16 @@ def install_on_linux(
         with suppress(FileNotFoundError):
             for file in path.rglob("*.fish"):
                 # $fish_complete_path
-                install_to(file, pkgdst / "share/fish/vendor_completions.d")
+                install_to(file, pkgdst / "share/fish/vendor_completions.d", mode=0o644)
         with suppress(FileNotFoundError):
             for file in path.rglob("*.bash"):
-                install_to(file, pkgdst / "share/bash-completion/completions")
+                install_to(
+                    file, pkgdst / "share/bash-completion/completions", mode=0o644
+                )
         with suppress(FileNotFoundError):
             for file in path.rglob("_*"):
                 if "zsh" in file.read_text():
-                    install_to(file, pkgdst / "share/zsh/site-functions")
+                    install_to(file, pkgdst / "share/zsh/site-functions", mode=0o644)
 
     first_layer: list[Path] = list(path.glob("*"))
     assert first_layer, f"{path} is empty"
