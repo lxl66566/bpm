@@ -101,6 +101,13 @@ update_parser = subparsers.add_parser("update", aliases=["u"], help="Update pack
 update_parser.add_argument(
     "packages", nargs="*", help="Package names to update. Update all by default."
 )
+update_parser.add_argument(
+    "-l",
+    "--local",
+    nargs="?",
+    metavar="Archive",
+    help="update from local archive.",
+)
 update_parser.set_defaults(func=cli_update)
 
 info_parser = subparsers.add_parser("info", help="Info package.")

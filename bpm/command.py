@@ -13,6 +13,31 @@ from .utils.constants import BIN_PATH, WINDOWS
 from .utils.exceptions import RepoNotFoundError
 
 
+def parse_name_or_url(name_or_url: str) -> tuple[str, bool]:
+    """
+    Parse the name or url of a package.
+    `Returns`: a tuple with two elements: first is the true name, second is the flag of whether it is a url.
+    """
+    test_parse = urlparse(name_or_url)
+    if test_parse.netloc == "github.com":
+        return RepoHandler.get_info_by_url(name_or_url)[1], True
+    return name_or_url, False
+
+
+def download_and_install(args, repo: RepoHandler, rename=True):
+    try:
+        with TemporaryDirectory() as tmp_dir:
+            tmp_dir = Path(tmp_dir)
+            if args.local:
+                with Path(args.local).open("rb") as f:
+                    main_path = extract(f, tmp_dir)
+            else:
+                main_path = download_and_extract(repo.asset, tmp_dir)
+            auto_install(repo, main_path, rename=rename)
+    except Exception as e:
+        raise e
+
+
 def cli_install(args):
     if args.interactive and args.quiet:
         log.error("Cannot use both --interactive and --quiet.")
@@ -27,15 +52,14 @@ def cli_install(args):
         )
         exit(1)
     for package in args.packages:
-        real_name = package
-        test_parse = urlparse(package)
-        if test_parse.netloc == "github.com":
-            real_name = RepoHandler.get_info_by_url(package)[1]
+        real_name, is_url = parse_name_or_url(package)
         if not args.dry_run and repo_group.find_repo(real_name)[1]:
             log.info(f"{real_name} is already installed.")
             continue
+
+        # search
         try:
-            if test_parse.netloc == "github.com":
+            if is_url:
                 repo = (
                     RepoHandler(
                         real_name,
@@ -55,41 +79,34 @@ def cli_install(args):
                     repo.ask(quiet=args.quiet, sort=args.sort)
             if not args.local:
                 repo.get_asset(interactive=args.interactive)
-
         except Exception as e:
             log.error(f"Failed on searching `{package}`: {e}")
             trace()
             exit(1)
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            try:
-                if args.local:
-                    with Path(args.local).open("rb") as f:
-                        main_path = extract(f, tmp_dir)
-                else:
-                    main_path = download_and_extract(repo.asset, tmp_dir)
-                auto_install(repo, main_path, rename=True)
-                log.info(f"Successfully installed `{repo.name}`.")
-                if WINDOWS:
-                    bins = (
-                        UFCS(repo.file_list)
-                        .filter(lambda x: x.endswith(".lnk"))
-                        .map(lambda x: Path(x).stem)
-                        .map(lambda x: f"`{x}`")
-                    )
-                    log.info(
-                        f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
-                    )
-                if not args.dry_run:
-                    repo_group.insert_repo(repo)
 
-            except Exception as e:
-                log.error(f"Failed to install `{repo.name}`: {e}")
-                trace()
-                log.error("Restoring...")
-                # rollback.
-                remove(repo.file_list)
-                error_exit("Files restored. Exiting...")
+        # install
+        try:
+            download_and_install(args, repo)
+            log.info(f"Successfully installed `{repo.name}`.")
+            if WINDOWS:
+                bins = (
+                    UFCS(repo.file_list)
+                    .filter(lambda x: x.endswith(".lnk"))
+                    .map(lambda x: Path(x).stem)
+                    .map(lambda x: f"`{x}`")
+                )
+                log.info(
+                    f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
+                )
+            if not args.dry_run:
+                repo_group.insert_repo(repo)
+        except Exception as e:
+            log.error(f"Failed to install `{repo.name}`: {e}")
+            trace()
+            log.error("Restoring...")
+            # rollback.
+            remove(repo.file_list)
+            error_exit("Files restored. Exiting...")
 
 
 def cli_remove(args):
@@ -131,10 +148,7 @@ def cli_update(args):
                 log.info(
                     f"`{repo.name}` has an update: {result[0]} -> {result[1]}. Updating..."
                 )
-                with TemporaryDirectory() as tmp_dir:
-                    tmp_dir = Path(tmp_dir)
-                    main_path = download_and_extract(repo.asset, tmp_dir)
-                    auto_install(repo, main_path, rename=False)
+                download_and_install(args, repo, rename=False)
                 log.info(f"`{repo.name}` updated successfully.")
             else:
                 log.info(f"`{repo.name}` is the newest.")

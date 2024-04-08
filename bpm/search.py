@@ -154,7 +154,7 @@ class RepoHandler:
         self.installed_files.append(str(file))
 
     @staticmethod
-    def get_info_by_fullname(fullname: str):
+    def get_info_by_fullname(fullname: str) -> tuple[str, str]:
         """
         Returns: a tuple of (repo_owner, repo_name)
         """
@@ -309,13 +309,15 @@ class RepoHandler:
         log.info(f"selected asset: {self.asset}")
         return self
 
-    def update_asset(self) -> Optional[tuple[str, str]]:
+    def update_asset(self) -> Optional[tuple[str, str] | tuple[None, None]]:
         """
-        update assets list.
+        update assets list. If a repo was installed locally, it will always return (None, None).
 
         `Returns`: `None` if has no update, `(old_version, new_version)` if has update.
         """
         old_version = self.version
+        if not old_version:
+            return None, None
         self.get_asset()
         if old_version == self.version:
             return None
