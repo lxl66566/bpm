@@ -23,7 +23,9 @@ subparsers = parser.add_subparsers(
 install_parser = subparsers.add_parser(
     "install", aliases=["i"], help="Install packages."
 )
-install_parser.add_argument("packages", nargs="+", help="Package name to install")
+install_parser.add_argument(
+    "packages", nargs="+", help="Package name or github url to install"
+)
 install_parser.add_argument(
     "-b",
     "--bin-name",

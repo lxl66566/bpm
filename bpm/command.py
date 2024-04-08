@@ -1,6 +1,7 @@
 import logging as log
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib.parse import urlparse
 
 from simpleufcs import UFCS
 
@@ -26,19 +27,34 @@ def cli_install(args):
         )
         exit(1)
     for package in args.packages:
-        if not args.dry_run and repo_group.find_repo(package)[1]:
-            log.info(f"{package} is already installed.")
+        real_name = package
+        test_parse = urlparse(package)
+        if test_parse.netloc == "github.com":
+            real_name = RepoHandler.get_info_by_url(package)[1]
+        if not args.dry_run and repo_group.find_repo(real_name)[1]:
+            log.info(f"{real_name} is already installed.")
             continue
         try:
-            repo = RepoHandler(
-                package,
-                prefer_gnu=args.prefer_gnu,
-                one_bin=args.one_bin,
-            ).with_bin_name(args.bin_name)
-            if not args.local:
-                repo = repo.ask(quiet=args.quiet, sort=args.sort).get_asset(
-                    interactive=args.interactive
+            if test_parse.netloc == "github.com":
+                repo = (
+                    RepoHandler(
+                        real_name,
+                        prefer_gnu=args.prefer_gnu,
+                        one_bin=args.one_bin,
+                    )
+                    .set_by_url(package)
+                    .with_bin_name(args.bin_name)
                 )
+            else:
+                repo = RepoHandler(
+                    package,
+                    prefer_gnu=args.prefer_gnu,
+                    one_bin=args.one_bin,
+                ).with_bin_name(args.bin_name)
+                if not args.local:
+                    repo.ask(quiet=args.quiet, sort=args.sort)
+            if not args.local:
+                repo.get_asset(interactive=args.interactive)
 
         except Exception as e:
             log.error(f"Failed on searching `{package}`: {e}")

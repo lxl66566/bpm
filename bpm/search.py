@@ -153,15 +153,30 @@ class RepoHandler:
     def add_file_list(self, file):
         self.installed_files.append(str(file))
 
-    def set_url(self, url: str):
+    @staticmethod
+    def get_info_by_fullname(fullname: str):
+        """
+        Returns: a tuple of (repo_owner, repo_name)
+        """
+        # why does https://t.me/withabsolutex/1479 happens?
+        r = fullname.strip("/").split("/")
+        assert len(r) == 2, "parsing invalid fullname"
+        return tuple(r)
+
+    @staticmethod
+    def get_info_by_url(url: str):
         """
         set repo_owner and repo_name from url
         """
-        # why does https://t.me/withabsolutex/1479 happens?
-        r = urlparse(url).path.strip("/").split("/")
-        assert len(r) == 2, "parsing invalid URL"
-        self.repo_owner = r[0]
-        self.repo_name = r[1]
+        return RepoHandler.get_info_by_fullname(urlparse(url).path)
+
+    def set_by_url(self, url: str):
+        """
+        set repo_owner and repo_name from url
+        """
+        info = self.get_info_by_url(url)
+        self.repo_owner = info[0]
+        self.repo_name = info[1]
         return self
 
     def search(self, page=1, sort=None) -> Optional[list[str]]:
@@ -204,7 +219,7 @@ class RepoHandler:
                 raise RepoNotFoundError
             if quiet:
                 log.info(f"auto select repo: {repo_selections[0]}")
-                return self.set_url(repo_selections[0])
+                return self.set_by_url(repo_selections[0])
             for i, item in enumerate(repo_selections):
                 print(f"{i+1}: {item}")
             try:
@@ -219,7 +234,7 @@ class RepoHandler:
                 elif temp == "p":
                     page -= 1
                     continue
-                return self.set_url(repo_selections[int(temp) - 1])
+                return self.set_by_url(repo_selections[int(temp) - 1])
             except KeyboardInterrupt:
                 print("Canceled.")
                 exit(0)
@@ -331,7 +346,7 @@ class Test(unittest.TestCase):
         self.assertListEqual(test.file_list, ["a", "b", "c"])
 
     def test_parse_url(self):
-        test = RepoHandler("yazi").set_url("https://github.com/sxyazi/yazi")
+        test = RepoHandler("yazi").set_by_url("https://github.com/sxyazi/yazi")
         self.assertEqual(test.repo_owner, "sxyazi")
         self.assertEqual(test.repo_name, "yazi")
 
