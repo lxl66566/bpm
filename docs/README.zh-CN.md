@@ -65,7 +65,7 @@ python3 -m bpm
 ## 使用
 
 - 安装：`bpm i <package>`
-- 执行 `bpm -h` 查看更多帮助。
+- 执行 `bpm -h` 和 `bpm i -h`查看更多帮助。
 
 ## 原理
 
@@ -98,3 +98,5 @@ poetry run python -m unittest bpm/**/*.py  # 运行测试
 - [x] try install
 - [x] windows support
 - [x] offline install
+- [x] install from github link
+- [x] update from local

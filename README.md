@@ -65,7 +65,29 @@ python3 -m bpm
 ## Usage
 
 - Install: `bpm i <package>`
-- Run `bpm -h` for more help.
+- Run `bpm -h` and `bpm i -h` for more help.
+
+```
+❯ bpm i -h
+usage: bpm install [-h] [-b [BIN_NAME]] [-l [Archive]] [-q] [--one-bin] [--prefer-gnu] [-n] [-i] [--sort [SORT]] packages [packages ...]
+
+positional arguments:
+  packages              Package name or github url to install
+
+options:
+  -h, --help            show this help message and exit
+  -b [BIN_NAME], --bin-name [BIN_NAME]
+                        specify the binary executable filename, otherwise use package name by default.
+  -l [Archive], --local [Archive]
+                        install from local archive.
+  -q, --quiet           not ask, install the best match repo.
+  --one-bin             install given binary only. Use package name as binary name by default.
+  --prefer-gnu          bpm prefers musl target by default, you can change this default option.
+  -n, --dry-run         print the install position, but not install actually.
+  -i, --interactive     select asset interactively.
+  --sort [SORT]         sort param in github api, use `best-match` by default. The value could be `stars`, `forks`, `help-wanted-
+                        issues`, `updated`.
+```
 
 ## How it works
 
@@ -98,3 +120,5 @@ poetry run python -m unittest bpm/**/*.py  # run tests
 - [x] try install
 - [x] windows support
 - [x] offline install
+- [x] install from github link
+- [x] update from local
