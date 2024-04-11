@@ -6,6 +6,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path, WindowsPath
+from typing import Union
 
 from ..lib.windowspathadder import add_windows_path
 from .constants import BIN_PATH, LINUX, WINDOWS
@@ -93,7 +94,7 @@ def select_interactive(options: list[str]) -> str:
             exit(0)
 
 
-def windows_path_to_windows_bash(p: WindowsPath | str) -> str:
+def windows_path_to_windows_bash(p: Union[WindowsPath, str]) -> str:
     """
     convert a windows path to posix path string. example:
 
@@ -106,7 +107,7 @@ def windows_path_to_windows_bash(p: WindowsPath | str) -> str:
     )
 
 
-def windows_path_to_wsl(p: WindowsPath | str) -> str:
+def windows_path_to_wsl(p: Union[WindowsPath, str]) -> str:
     """
     convert a windows path to wsl path string. example:
 

@@ -7,7 +7,7 @@ import zipfile
 from contextlib import suppress
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import Optional, Union
 
 import requests
 import tqdm
@@ -67,8 +67,8 @@ def install(
 
 
 def merge_dir(
-    _from: Path | str,
-    _to: Path | str,
+    _from: Union[Path, str],
+    _to: Union[Path, str],
     rename: bool = True,
     recorder: Optional[list[str]] = None,
 ):
@@ -162,7 +162,7 @@ def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
 
 def extract(buffer: io.BytesIO, to_dir: Path) -> Path:
     """
-    extract tar | zip | 7z to dir.
+    extract tar / zip / 7z to dir.
 
     `Returns`: the "main" path of extracted files.
     """
@@ -306,25 +306,25 @@ def install_on_linux(
 
     for file in first_layer:
         # 2. merge all files to coordinate position
-        match file.name:
-            case "lib":
-                merge_dir(file, pkgdst / "lib", rename=rename, recorder=recorder)
-            case "include":
-                merge_dir(file, pkgdst / "include", rename=rename, recorder=recorder)
-            case "share":
-                merge_dir(file, pkgdst / "share", rename=rename, recorder=recorder)
-            case "bin":
-                merge_dir(file, pkgdst / "bin", rename=rename, recorder=recorder)
-            case "man":
-                merge_dir(file, pkgdst / "share/man", rename=rename, recorder=recorder)
-            # 3. deal with other circumstance.
-            case name:
-                if name.startswith("complet"):
-                    install_completions(file)
-                elif name == bin_name and file.is_file():
-                    install_bin(file)
-                else:
-                    log.debug(f"cannot match {name}.")
+        if file.name == "lib":
+            merge_dir(file, pkgdst / "lib", rename=rename, recorder=recorder)
+        elif file.name == "include":
+            merge_dir(file, pkgdst / "include", rename=rename, recorder=recorder)
+        elif file.name == "share":
+            merge_dir(file, pkgdst / "share", rename=rename, recorder=recorder)
+        elif file.name == "bin":
+            merge_dir(file, pkgdst / "bin", rename=rename, recorder=recorder)
+        elif file.name == "man":
+            merge_dir(file, pkgdst / "share/man", rename=rename, recorder=recorder)
+        # 3. deal with other circumstance.
+        else:
+            name = file.name
+            if name.startswith("complet"):
+                install_completions(file)
+            elif name == bin_name and file.is_file():
+                install_bin(file)
+            else:
+                log.debug(f"cannot match {name}.")
 
     # check binary
     if not any(map(lambda x: x.startswith("/usr/bin"), recorder)):
@@ -419,15 +419,14 @@ def auto_install(
     Install by different platforms.
     """
 
-    match platform.system():
-        case "Linux":
-            install_on_linux(
-                pkgsrc, repo.bin_name, repo.one_bin, rename, repo.installed_files
-            )
-        case "Windows":
-            install_on_windows(repo, pkgsrc)
-        case _:
-            raise NotImplementedError(f"{platform.system()} is not supported now.")
+    if platform.system() == "Linux":
+        install_on_linux(
+            pkgsrc, repo.bin_name, repo.one_bin, rename, repo.installed_files
+        )
+    elif platform.system() == "Windows":
+        install_on_windows(repo, pkgsrc)
+    else:
+        raise NotImplementedError(f"{platform.system()} is not supported now.")
 
 
 import unittest  # noqa: E402

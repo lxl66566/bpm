@@ -5,7 +5,7 @@ from contextlib import suppress
 from pathlib import Path
 from pprint import pprint
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import Optional, Union
 
 from .search import RepoHandler
 from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, WINDOWS
@@ -33,7 +33,9 @@ class RepoGroup:
         for repo in self.repos:
             print(repo)
 
-    def find_repo(self, repo: str | RepoHandler) -> tuple[int, Optional[RepoHandler]]:
+    def find_repo(
+        self, repo: Union[str, RepoHandler]
+    ) -> tuple[int, Optional[RepoHandler]]:
         """
         Find a repo.
         return the index and the object of repo.
@@ -45,7 +47,7 @@ class RepoGroup:
             return (index, self.repos[index])
         return (-1, None)
 
-    def info_one_repo(self, repo: str | RepoHandler) -> RepoHandler:
+    def info_one_repo(self, repo: Union[str, RepoHandler]) -> RepoHandler:
         """
         Print ALL messages about one repo.
         If not found, raise exception `RepoNotFoundError`.
@@ -65,7 +67,7 @@ class RepoGroup:
         self.repos.insert(index, repo)
         self.save()
 
-    def remove_repo(self, repo: str | RepoHandler) -> RepoHandler:
+    def remove_repo(self, repo: Union[str, RepoHandler]) -> RepoHandler:
         """
         Remove repo and save.
         """

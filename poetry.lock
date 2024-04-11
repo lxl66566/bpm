@@ -916,22 +916,6 @@ url = "https://pypi.tuna.tsinghua.edu.cn/simple"
 reference = "tsinghua-pypi"
 
 [[package]]
-name = "simpleufcs"
-version = "1.0.0"
-description = "A simple Uniform Function Call Syntax (UFCS) implementation in python."
-optional = false
-python-versions = "*"
-files = [
-    {file = "simpleufcs-1.0.0-py3-none-any.whl", hash = "sha256:c7c9d0b42950c68feb1c5c6dd3bdb74aefa14433cfe921bcae5fe4bee47c8703"},
-    {file = "simpleufcs-1.0.0.tar.gz", hash = "sha256:ba66960400fb0ca191aa44aabd69fddaaad7d1a05e83eec5486b55ad36db3f2b"},
-]
-
-[package.source]
-type = "legacy"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-reference = "tsinghua-pypi"
-
-[[package]]
 name = "texttable"
 version = "1.7.0"
 description = "module to create simple ASCII tables"
@@ -996,5 +980,5 @@ reference = "tsinghua-pypi"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.10"
-content-hash = "3327b6b740054d80ea2db7f130953665b7548ecf7686aef32f7101792e6a34ff"
+python-versions = "^3.8"
+content-hash = "b87f1dbf6c6ccb6fdec462410ece547ba016c4bda21a488545a5aa4f9fada1d9"

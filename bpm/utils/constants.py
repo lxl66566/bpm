@@ -4,15 +4,14 @@ import platform
 WINDOWS = False
 LINUX = False
 
-match platform.system():
-    case "Linux":
-        CONF_PATH = pathlib.Path("/etc/bpm")
-        LINUX = True
-    case "Windows":
-        CONF_PATH = pathlib.Path.home() / "bpm"
-        WINDOWS = True
-    case _:
-        raise NotImplementedError("Unsupported platform")
+if platform.system() == "Linux":
+    CONF_PATH = pathlib.Path("/etc/bpm")
+    LINUX = True
+elif platform.system() == "Windows":
+    CONF_PATH = pathlib.Path.home() / "bpm"
+    WINDOWS = True
+else:
+    raise NotImplementedError("Unsupported platform")
 
 DATABASE_PATH = CONF_PATH / "bpm.db"
 INFO_BASE_STRING = "{:20}{:50}{:20}"

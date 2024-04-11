@@ -8,7 +8,7 @@ import sys
 from enum import Enum
 from functools import reduce
 from pprint import pprint
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -85,13 +85,12 @@ def sort_list(
     ['12', '23', '13']
     """
     comb_func = any if combination == Combination.ANY else all
-    match match_pos:
-        case MatchPos.ALL:
-            match_func = lambda a, b: a not in b
-        case MatchPos.BEGIN:
-            match_func = lambda a, b: not b.beginswith(a)
-        case MatchPos.END:
-            match_func = lambda a, b: not b.endswith(a)
+    if match_pos == MatchPos.ALL:
+        match_func = lambda a, b: a not in b
+    elif match_pos == MatchPos.BEGIN:
+        match_func = lambda a, b: not b.beginswith(a)
+    elif match_pos == MatchPos.END:
+        match_func = lambda a, b: not b.endswith(a)
 
     is_valid = lambda s: comb_func(
         map(
@@ -164,7 +163,7 @@ class RepoHandler:
             setattr(self, k, v)
         return self
 
-    def with_bin_name(self, bin_name: str | None):
+    def with_bin_name(self, bin_name: Union[str, None]):
         if WINDOWS:
             self.bin_name = bin_name.rstrip(".exe") + ".exe" if bin_name else "*.exe"
         else:
@@ -181,11 +180,10 @@ class RepoHandler:
 
     @property
     def api_base(self):
-        match self.site:
-            case "github":
-                return "https://api.github.com"
-            case _:
-                raise NotImplementedError
+        if self.site == "github":
+            return "https://api.github.com"
+        else:
+            raise NotImplementedError
 
     @property
     def file_list(self) -> list[str]:

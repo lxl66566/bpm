@@ -1,9 +1,8 @@
 import logging as log
+from copy import copy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
-
-from simpleufcs import UFCS
 
 from .install import auto_install, download_and_extract, extract, remove
 from .search import RepoHandler
@@ -91,12 +90,10 @@ def cli_install(args):
             download_and_install(args, repo)
             log.info(f"Successfully installed `{repo.name}`.")
             if WINDOWS:
-                bins = (
-                    UFCS(repo.file_list)
-                    .filter(lambda x: x.endswith(".lnk"))
-                    .map(lambda x: Path(x).stem)
-                    .map(lambda x: f"`{x}`")
-                )
+                bins = copy(repo.file_list)
+                bins = filter(lambda x: x.endswith(".lnk"), bins)
+                bins = map(lambda x: Path(x).stem, bins)
+                bins = map(lambda x: f"`{x}`", bins)
                 log.info(
                     f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
                 )
@@ -146,7 +143,8 @@ def cli_update(args):
     def update(repo: RepoHandler):
         try:
             log.info(f"Updating `{repo.name}`...")
-            if result := repo.update_asset():
+            result = repo.update_asset()
+            if result:
                 log.info(
                     f"`{repo.name}` has an update: {result[0]} -> {result[1]}. Updating..."
                 )
