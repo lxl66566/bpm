@@ -65,6 +65,7 @@ def cli_install(args):
                         real_name,
                         prefer_gnu=args.prefer_gnu,
                         one_bin=args.one_bin,
+                        asset_filter=args.filter,
                     )
                     .set_by_url(package)
                     .with_bin_name(args.bin_name)
@@ -74,6 +75,7 @@ def cli_install(args):
                     package,
                     prefer_gnu=args.prefer_gnu,
                     one_bin=args.one_bin,
+                    asset_filter=args.filter,
                 ).with_bin_name(args.bin_name)
                 if not args.local:
                     repo.ask(quiet=args.quiet, sort=args.sort)

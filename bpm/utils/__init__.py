@@ -56,7 +56,7 @@ def trace():
         traceback.print_exc()
 
 
-def multi_in(parts: list | str, total: str):
+def multi_in(parts: list, total: str):
     """
     return any strings in the list is a part of one string.
     """

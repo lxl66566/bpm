@@ -74,6 +74,11 @@ install_parser.add_argument(
     help="select asset interactively.",
 )
 install_parser.add_argument(
+    "--filter",
+    nargs="*",
+    help="filter assets",
+)
+install_parser.add_argument(
     "--sort",
     nargs="?",
     type=lambda value: value_in(

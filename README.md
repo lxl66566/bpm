@@ -69,7 +69,7 @@ python3 -m bpm
 
 ```
 ❯ bpm i -h
-usage: bpm install [-h] [-b [BIN_NAME]] [-l [Archive]] [-q] [--one-bin] [--prefer-gnu] [-n] [-i] [--sort [SORT]] packages [packages ...]
+usage: bpm install [-h] [-b [BIN_NAME]] [-l [Archive]] [-q] [--one-bin] [--prefer-gnu] [-n] [-i] [--filter [FILTER ...]] [--sort [SORT]] packages [packages ...]
 
 positional arguments:
   packages              Package name or github url to install
@@ -85,6 +85,8 @@ options:
   --prefer-gnu          bpm prefers musl target by default, you can change this default option.
   -n, --dry-run         print the install position, but not install actually.
   -i, --interactive     select asset interactively.
+  --filter [FILTER ...]
+                        filter assets
   --sort [SORT]         sort param in github api, use `best-match` by default. The value could be `stars`, `forks`, `help-wanted-
                         issues`, `updated`.
 ```

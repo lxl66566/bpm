@@ -1,3 +1,6 @@
+# ruff: noqa: E731
+
+import functools
 import logging as log
 import platform
 import posixpath
@@ -10,7 +13,7 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 
-from .utils import select_interactive
+from .utils import multi_in, select_interactive
 from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from .utils.exceptions import AssetNotFoundError, InvalidAssetError, RepoNotFoundError
 
@@ -22,6 +25,16 @@ class Combination(Enum):
 
     ALL = 0
     ANY = 1
+
+
+class MatchPos(Enum):
+    """
+    Enum for the str matching position
+    """
+
+    ALL = 0
+    BEGIN = 1
+    END = 2
 
 
 def select_list(
@@ -44,7 +57,7 @@ def select_list(
     ['12', '21']
     """
     comb_func = any if combination == Combination.ANY else all
-    is_valid = lambda s: comb_func(  # noqa: E731
+    is_valid = lambda s: comb_func(
         map(
             (lambda x: x in s)
             if case_sensitive
@@ -58,7 +71,8 @@ def select_list(
 def sort_list(
     sort_list: list[str],
     prompts: list[str],
-    combination: Combination = Combination.ALL,
+    combination=Combination.ALL,
+    match_pos=MatchPos.ALL,
     case_sensitive=False,
 ) -> list[str]:
     """
@@ -71,15 +85,36 @@ def sort_list(
     ['12', '23', '13']
     """
     comb_func = any if combination == Combination.ANY else all
-    is_valid = lambda s: comb_func(  # noqa: E731
+    match match_pos:
+        case MatchPos.ALL:
+            match_func = lambda a, b: a not in b
+        case MatchPos.BEGIN:
+            match_func = lambda a, b: not b.beginswith(a)
+        case MatchPos.END:
+            match_func = lambda a, b: not b.endswith(a)
+
+    is_valid = lambda s: comb_func(
         map(
-            (lambda x: x not in s)
+            (lambda x: match_func(x, s))
             if case_sensitive
-            else (lambda x: x.lower() not in s.lower()),
+            else (lambda x: match_func(x.lower(), s.lower())),
             prompts,
         )
     )
     return sorted(sort_list, key=is_valid)
+
+
+@functools.lru_cache()
+def platform_map() -> list:
+    return [platform.system()]
+
+
+@functools.lru_cache()
+def architecture_map():
+    if platform.machine() == "AMD64":
+        return ["x86_64", "amd64"]
+    else:
+        return [platform.machine()]
 
 
 class RepoHandler:
@@ -90,6 +125,7 @@ class RepoHandler:
         self.repo_name = None
         self.repo_owner = None
         self.asset = None
+        self.asset_filter = []
         self.version = None
         self.installed_files: list[str] = []
         self.prefer_gnu: bool = False
@@ -110,6 +146,18 @@ class RepoHandler:
 
     def __eq__(self, __value: object) -> bool:
         return self.name == __value.name
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        return state
+
+    def __setstate__(self, state):
+        """
+        Add backward Compatibility
+        """
+        self.__dict__.update(state)
+        if "asset_filter" not in state:
+            self.asset_filter = []
 
     def set(self, **kwargs):
         for k, v in kwargs.items():
@@ -276,32 +324,32 @@ class RepoHandler:
             log.info(f"selected asset: {self.asset}")
             return self
 
+        # asset filter
+        if self.asset_filter:
+            assets = list(filter(lambda a: multi_in(self.asset_filter, a), assets))
+
         # select
         # 1. platform
-        pltfm = (
-            [platform.system().lower(), "win"]
-            if WINDOWS and "win" not in self.name.lower()
-            else [platform.system().lower()]
-        )
-        assets = select_list(assets, pltfm, Combination.ANY)
+        log.debug(f"platform filter: {platform_map()}")
+        assets = select_list(assets, platform_map(), Combination.ANY)
+        log.debug(f"platform selected assets: {assets}")
+
         # 2. architecture
-        arch = (
-            [platform.machine().lower()]
-            if platform.machine().lower() != "amd64"
-            else ["amd64", "x86_64"]
-        )
-        assets = select_list(assets, arch, Combination.ANY)
+        log.debug(f"architecture filter: {architecture_map()}")
+        assets = select_list(assets, architecture_map(), Combination.ANY)
+
         # 3. musl or gnu
         if not self.prefer_gnu:
             assets = sort_list(assets, ["musl"])
+
         # 4. tar, zip, 7z, other
-        assets = sorted(assets, key=lambda x: not x.endswith(".7z"))
+        assets = sort_list(assets, [".7z"], match_pos=MatchPos.END)
         if WINDOWS:
-            assets = sorted(assets, key=lambda x: ".tar." not in x)
-            assets = sorted(assets, key=lambda x: not x.endswith(".zip"))
+            assets = sort_list(assets, [".tar."])
+            assets = sort_list(assets, [".zip"], match_pos=MatchPos.END)
         else:
-            assets = sorted(assets, key=lambda x: not x.endswith(".zip"))
-            assets = sorted(assets, key=lambda x: ".tar." not in x)
+            assets = sort_list(assets, [".zip"], match_pos=MatchPos.END)
+            assets = sort_list(assets, [".tar."])
 
         if not assets:
             raise InvalidAssetError
