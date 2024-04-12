@@ -172,17 +172,18 @@ def extract(buffer: io.BytesIO, to_dir: Path) -> Path:
                 raise TarPathTraversalException
             file.extractall(path=to_dir)
     except tarfile.ReadError:
+        buffer.seek(0)
         try:
             with zipfile.ZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
         except zipfile.BadZipFile:
+            buffer.seek(0)
             try:
                 import py7zr
             except ImportError:
                 utils.error_exit("cannot extract 7z file without py7zr module.")
 
-            with py7zr.SevenZipFile(buffer, "r") as file:
-                file.extractall(path=to_dir)
+            py7zr.SevenZipFile(buffer, "r").extractall(path=to_dir)
 
     temp = list(to_dir.glob("*"))
     if len(temp) == 1 and temp[0].is_dir():
