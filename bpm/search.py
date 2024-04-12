@@ -355,7 +355,7 @@ class RepoHandler:
         log.info(f"selected asset: {self.asset}")
         return self
 
-    def update_asset(self) -> Optional[tuple[str, str] | tuple[None, None]]:
+    def update_asset(self) -> Optional[Union[tuple[str, str], tuple[None, None]]]:
         """
         update assets list. If a repo was installed locally, it will always return (None, None).
 

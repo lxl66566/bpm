@@ -16,7 +16,7 @@ classifiers = [
 packages = [{ include = "bpm" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 py7zr = { version = "^0.20.8", markers = "sys_platform == 'win32'" }
 requests = "^2.31.0"
 tqdm = "^4.66.2"

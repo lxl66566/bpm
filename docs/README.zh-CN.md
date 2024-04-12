@@ -4,7 +4,7 @@
 
 bin package manager (BPM) 是一个基于 Github release 的包管理器，它允许用户安装并管理任意 Github release 上的二进制文件。
 
-BPM 支持 Windows 与 Linux 系统，python 版本 >= 3.10。
+BPM 支持 Windows 与 Linux 系统，python 版本 >= 3.9。
 
 > [!CAUTION]
 > 风险提示：BPM Linux 可能会破坏您的计算机。使用 BPM 安装软件即代表您已接受此风险，并信任第三方 Github release 的打包者。
