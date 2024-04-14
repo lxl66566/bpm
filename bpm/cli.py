@@ -43,7 +43,7 @@ install_parser.add_argument(
     "-q",
     "--quiet",
     action="store_true",
-    help="not ask, install the best match repo.",
+    help="not ask, install the best match repo, show less messages",
 )
 install_parser.add_argument(
     "--one-bin",

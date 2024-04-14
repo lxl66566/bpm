@@ -236,23 +236,26 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
 
 def install_on_linux(
     path: Path,
-    # how about using multiple candidate bin_names : list[str] ?
+    # TODO: how about using multiple candidate bin_names : list[str] ?
     bin_name: str,
     one_bin: bool = False,
     rename: bool = True,
     recorder: Optional[list[str]] = None,
-    pkgdst=Path("/usr"),
+    pkgdst=Path("/"),
 ):
     """
     Install files to a linux system.
     1. Single binary
     2. System structure-like
     3. completions
+    4. services
 
     `path`: The "main path" dir of files to be installed.
     """
     assert LINUX, "Not a linux system"
     pkgdst = Path(pkgdst)
+
+    log.debug(f"install_on_linux() with params: {locals()}")
 
     def install_to(_from: Path, _to: Path, mode: Optional[int] = None):
         """
@@ -271,8 +274,12 @@ def install_on_linux(
         if hasattr(install_bin, "called"):
             log.debug(f"already installed {p.name}")
             return
-        install_to(p, pkgdst / "bin", mode=0o755)
+        install_to(p, pkgdst / "usr/bin", mode=0o755)
         install_bin.called = True
+
+    def install_service(p: Path):
+        """Install service file."""
+        install_to(p, pkgdst / "usr/lib/systemd/system/", mode=0o644)
 
     def install_completions(path: Path):
         """Install completions from a dir."""
@@ -283,40 +290,52 @@ def install_on_linux(
         with suppress(FileNotFoundError):
             for file in path.rglob("*.fish"):
                 # $fish_complete_path
-                install_to(file, pkgdst / "share/fish/vendor_completions.d", mode=0o644)
+                install_to(
+                    file, pkgdst / "usr/share/fish/vendor_completions.d", mode=0o644
+                )
         with suppress(FileNotFoundError):
             for file in path.rglob("*.bash"):
                 install_to(
-                    file, pkgdst / "share/bash-completion/completions", mode=0o644
+                    file, pkgdst / "usr/share/bash-completion/completions", mode=0o644
                 )
         with suppress(FileNotFoundError):
             for file in path.rglob("_*"):
                 if "zsh" in file.read_text():
-                    install_to(file, pkgdst / "share/zsh/site-functions", mode=0o644)
+                    install_to(
+                        file, pkgdst / "usr/share/zsh/site-functions", mode=0o644
+                    )
 
     first_layer: list[Path] = list(path.glob("*"))
     assert first_layer, f"{path} is empty"
 
     # 1. only install one bin
     if one_bin or len(first_layer) == 1:
-        bin = next(path.glob("*" if len(first_layer) == 1 else bin_name))
-        first_layer.remove(bin)
-        install_bin(bin)
-        if one_bin:
-            return
+        # if there is only one file (not dir), assert it's a binary file, whatever the name it is.
+        if len(first_layer) == 1 and first_layer[0].is_file():
+            bin = first_layer[0]
+        else:
+            bin = next(path.rglob(bin_name))
+        if bin is not None and bin.is_file():
+            log.debug(f"judge out bin: selected {bin}")
+            install_bin(bin)
+            bin.unlink()
+            if one_bin:
+                return
 
-    for file in first_layer:
+    for file in path.glob("*"):
         # 2. merge all files to coordinate position
-        if file.name == "lib":
-            merge_dir(file, pkgdst / "lib", rename=rename, recorder=recorder)
+        if file.name == "usr":
+            merge_dir(file, pkgdst / "usr", rename=rename, recorder=recorder)
+        elif file.name == "lib":
+            merge_dir(file, pkgdst / "usr/lib", rename=rename, recorder=recorder)
         elif file.name == "include":
-            merge_dir(file, pkgdst / "include", rename=rename, recorder=recorder)
+            merge_dir(file, pkgdst / "usr/include", rename=rename, recorder=recorder)
         elif file.name == "share":
-            merge_dir(file, pkgdst / "share", rename=rename, recorder=recorder)
+            merge_dir(file, pkgdst / "usr/share", rename=rename, recorder=recorder)
         elif file.name == "bin":
-            merge_dir(file, pkgdst / "bin", rename=rename, recorder=recorder)
+            merge_dir(file, pkgdst / "usr/bin", rename=rename, recorder=recorder)
         elif file.name == "man":
-            merge_dir(file, pkgdst / "share/man", rename=rename, recorder=recorder)
+            merge_dir(file, pkgdst / "usr/share/man", rename=rename, recorder=recorder)
         # 3. deal with other circumstance.
         else:
             name = file.name
@@ -326,6 +345,10 @@ def install_on_linux(
                 install_bin(file)
             else:
                 log.debug(f"cannot match {name}.")
+
+    # 4 install service file
+    for file in path.rglob("*.service"):
+        install_service(file)
 
     # check binary
     if not any(map(lambda x: x.startswith("/usr/bin"), recorder)):
@@ -532,14 +555,14 @@ class Test(unittest.TestCase):
                 "https://github.com/eza-community/eza/releases/download/v0.17.2/eza_x86_64-unknown-linux-musl.tar.gz",
                 src,
             )
-            install_on_linux(main, "eza", pkgdst=usr)
+            install_on_linux(main, "eza", pkgdst=dst)
             self.assertTrue((bin / "eza").exists())
 
             main = download_and_extract(
                 "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
                 src,
             )
-            install_on_linux(main, "rg", pkgdst=usr)
+            install_on_linux(main, "rg", pkgdst=dst)
             for i in usr.rglob("*"):
                 log.debug(i) if i.is_file() else None
             self.assertTrue((bin / "rg").exists())

@@ -41,6 +41,8 @@ def cli_install(args):
     if args.interactive and args.quiet:
         log.error("Cannot use both --interactive and --quiet.")
         exit(1)
+    if args.quiet:
+        log.getLogger().setLevel(log.WARNING)
     if args.dry_run:
         set_dry_run()
     else:
@@ -88,13 +90,13 @@ def cli_install(args):
         # install
         try:
             download_and_install(args, repo)
-            log.info(f"Successfully installed `{repo.name}`.")
+            print(f"Successfully installed `{repo.name}`.")
             if WINDOWS:
                 bins = copy(repo.file_list)
                 bins = filter(lambda x: x.endswith(".lnk"), bins)
                 bins = map(lambda x: Path(x).stem, bins)
                 bins = map(lambda x: f"`{x}`", bins)
-                log.info(
+                print(
                     f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
                 )
             if not args.dry_run:

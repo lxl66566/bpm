@@ -110,8 +110,9 @@ def platform_map() -> list:
 
 @functools.lru_cache()
 def architecture_map():
-    if platform.machine() == "AMD64":
-        return ["x86_64", "amd64"]
+    pair1 = ["x86_64", "amd64"]
+    if platform.machine() in pair1:
+        return pair1
     else:
         return [platform.machine()]
 
