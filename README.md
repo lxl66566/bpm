@@ -100,6 +100,7 @@ BPM automatically determines the file structure in the asset and installs it to 
 1. install binary
 2. merge the `lib`, `include`, `share`, `man`, `bin` directories into the system
 3. install completions
+4. install services (if exists systemd)
 
 BPM automatically adds the `.old` suffix to existing files to avoid overwrite. The `.old` files will be restored in uninstalling.
 

@@ -279,7 +279,8 @@ def install_on_linux(
 
     def install_service(p: Path):
         """Install service file."""
-        install_to(p, pkgdst / "usr/lib/systemd/system/", mode=0o644)
+        with suppress(FileNotFoundError):
+            install_to(p, pkgdst / "usr/lib/systemd/system/", mode=0o644)
 
     def install_completions(path: Path):
         """Install completions from a dir."""

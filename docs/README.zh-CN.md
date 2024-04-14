@@ -76,6 +76,7 @@ BPM 自动判断 asset 中的文件结构，并安装到系统中的相应位置
 1. 安装 binary
 2. 合并 `lib`, `include`, `share`, `man`, `bin` 目录到系统
 3. 安装 completions
+4. 安装 services（基于 systemd 的系统）
 
 BPM 会自动为已存在的文件添加 `.old` 后缀，以避免覆盖。卸载时，`.old` 文件将被恢复。
 
