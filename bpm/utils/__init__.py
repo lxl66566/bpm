@@ -57,41 +57,10 @@ def trace():
         traceback.print_exc()
 
 
-def multi_in(parts: list, total: str):
-    """
-    return any strings in the list is a part of one string.
-    """
-    if isinstance(parts, str):
-        parts = [parts]
-    return any(x in total for x in parts)
-
-
 def ensure_windows_path():
     assert WINDOWS, "This function only works on Windows."
     if not TEST:
         add_windows_path(BIN_PATH)
-
-
-def select_interactive(options: list[str]) -> str:
-    """
-    select an option from a list.
-    """
-    for i, option in enumerate(options):
-        print(f"{i+1}. {option}")
-    while True:
-        try:
-            choice = int(input("Enter your choice: "))
-            if 1 <= choice <= len(options):
-                return options[choice - 1]
-            else:
-                raise ValueError
-        except ValueError:
-            print(
-                f"Invalid choice. Please enter a number between 1 and {len(options)}."
-            )
-        except KeyboardInterrupt:
-            print("Interrupted by user.")
-            exit(0)
 
 
 def windows_path_to_windows_bash(p: Union[WindowsPath, str]) -> str:
@@ -149,12 +118,6 @@ import unittest  # noqa: E402
 
 
 class Test(unittest.TestCase):
-    def test_multi_in(self):
-        self.assertTrue(multi_in(["a", "b"], "a"))
-        self.assertTrue(multi_in(["win", "windo"], "windals"))
-        self.assertTrue(multi_in("123", "1234"))
-        self.assertFalse(multi_in(["13", "14"], "1234"))
-
     def test_windows_path_convert(self):
         if not WINDOWS:
             return

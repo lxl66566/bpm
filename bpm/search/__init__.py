@@ -1,11 +1,9 @@
 # ruff: noqa: E731
 
-import functools
 import logging as log
-import platform
 import posixpath
 import sys
-from enum import Enum
+import unittest
 from functools import reduce
 from pprint import pprint
 from typing import Optional, Union
@@ -13,108 +11,10 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 
-from .utils import multi_in, select_interactive
-from .utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
-from .utils.exceptions import AssetNotFoundError, InvalidAssetError, RepoNotFoundError
-
-
-class Combination(Enum):
-    """
-    Enum for the different ways of combining the select_list and prompt.
-    """
-
-    ALL = 0
-    ANY = 1
-
-
-class MatchPos(Enum):
-    """
-    Enum for the str matching position
-    """
-
-    ALL = 0
-    BEGIN = 1
-    END = 2
-
-
-def select_list(
-    select_list: list[str],
-    prompts: list[str],
-    combination: Combination = Combination.ALL,
-    case_sensitive=False,
-) -> list[str]:
-    """
-    Selects items from the given list and return.
-    if no item were found, return the origin list, so the return list will not be empty.
-
-    :param combination: ALL => every prompt should in the word, ANY => one or more prompt in the word.
-
-    >>> select_list(["12", "13", "23"], ["1"])
-    ['12', '13']
-    >>> select_list(["12", "13", "23", "34"], ["1", "2"], Combination.ANY)
-    ['12', '13', '23']
-    >>> select_list(["12", "13", "23", "34", "21"], ["1", "2"], Combination.ALL)
-    ['12', '21']
-    """
-    comb_func = any if combination == Combination.ANY else all
-    is_valid = lambda s: comb_func(
-        map(
-            (lambda x: x in s)
-            if case_sensitive
-            else (lambda x: x.lower() in s.lower()),
-            prompts,
-        )
-    )
-    return list(filter(is_valid, select_list)) or select_list
-
-
-def sort_list(
-    sort_list: list[str],
-    prompts: list[str],
-    combination=Combination.ALL,
-    match_pos=MatchPos.ALL,
-    case_sensitive=False,
-) -> list[str]:
-    """
-    Sort items from the given list and return.
-
-    :param combination: ALL => every prompt should in the word, ANY => one or more prompt in the word.
-
-
-    >>> sort_list(["12", "13", "23"], ["2"])
-    ['12', '23', '13']
-    """
-    comb_func = any if combination == Combination.ANY else all
-    if match_pos == MatchPos.ALL:
-        match_func = lambda a, b: a not in b
-    elif match_pos == MatchPos.BEGIN:
-        match_func = lambda a, b: not b.beginswith(a)
-    elif match_pos == MatchPos.END:
-        match_func = lambda a, b: not b.endswith(a)
-
-    is_valid = lambda s: comb_func(
-        map(
-            (lambda x: match_func(x, s))
-            if case_sensitive
-            else (lambda x: match_func(x.lower(), s.lower())),
-            prompts,
-        )
-    )
-    return sorted(sort_list, key=is_valid)
-
-
-@functools.lru_cache()
-def platform_map() -> list:
-    return [platform.system()]
-
-
-@functools.lru_cache()
-def architecture_map():
-    pair1 = ["x86_64", "amd64"]
-    if platform.machine() in pair1:
-        return pair1
-    else:
-        return [platform.machine()]
+from ..utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
+from ..utils.exceptions import AssetNotFoundError, RepoNotFoundError
+from ..utils.input import get_user_choice_classic, user_interrupt
+from .arch_select import multi_in, select, sort_list
 
 
 class RepoHandler:
@@ -254,6 +154,7 @@ class RepoHandler:
         else:
             r.raise_for_status()
 
+    @user_interrupt
     def ask(self, quiet: bool = False, sort=None):
         """
         ask what repo to install.
@@ -282,9 +183,6 @@ class RepoHandler:
                     page -= 1
                     continue
                 return self.set_by_url(repo_selections[int(temp) - 1])
-            except KeyboardInterrupt:
-                print("Canceled.")
-                exit(0)
             except IndexError:
                 print(
                     f"Invalid input: the number should not be more than {OPTION_REPO_NUM}",
@@ -319,39 +217,21 @@ class RepoHandler:
         assets: list[str] = [x["browser_download_url"] for x in r[0]["assets"]]
 
         if interactive:
-            self.asset = select_interactive(assets)
+            self.asset = get_user_choice_classic(assets, "please choose an asset:")
             log.info(f"selected asset: {self.asset}")
             return self
 
-        # asset filter
+        # user filter
         if self.asset_filter:
             assets = list(filter(lambda a: multi_in(self.asset_filter, a), assets))
 
-        # select
-        # 1. platform
-        log.debug(f"platform filter: {platform_map()}")
-        assets = select_list(assets, platform_map(), Combination.ANY)
-        log.debug(f"platform selected assets: {assets}")
+        # select by architecture
+        assets = select(assets)
 
-        # 2. architecture
-        log.debug(f"architecture filter: {architecture_map()}")
-        assets = select_list(assets, architecture_map(), Combination.ANY)
-
-        # 3. musl or gnu
+        # sort by musl
         if not self.prefer_gnu:
             assets = sort_list(assets, ["musl"])
 
-        # 4. tar, zip, 7z, other
-        assets = sort_list(assets, [".7z"], match_pos=MatchPos.END)
-        if WINDOWS:
-            assets = sort_list(assets, [".tar."])
-            assets = sort_list(assets, [".zip"], match_pos=MatchPos.END)
-        else:
-            assets = sort_list(assets, [".zip"], match_pos=MatchPos.END)
-            assets = sort_list(assets, [".tar."])
-
-        if not assets:
-            raise InvalidAssetError
         self.asset = assets[0]
         log.info(f"selected asset: {self.asset}")
         return self
@@ -371,7 +251,7 @@ class RepoHandler:
         return (old_version, self.version)
 
 
-import unittest  # noqa: E402
+# region Test
 
 
 class Test(unittest.TestCase):
@@ -401,7 +281,4 @@ class Test(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    import doctest
-
     unittest.main()
-    doctest.testmod()
