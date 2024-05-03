@@ -66,9 +66,12 @@ class RepoHandler:
 
     def with_bin_name(self, bin_name: Union[str, None]):
         if WINDOWS:
-            self.bin_name = bin_name.rstrip(".exe") + ".exe" if bin_name else "*.exe"
+            self.bin_name = (
+                bin_name.removesuffix(".exe") + ".exe" if bin_name else "*.exe"
+            )
         else:
             self.bin_name = bin_name or self.name
+        log.debug(f"with bin Name: {self.bin_name}")
         return self
 
     @property
