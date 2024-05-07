@@ -224,9 +224,12 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
                         buffer.write(chunk)
                         pbar.update(chunk_bar_size)
 
-            # Process the file in memory (e.g., extract its contents)
             buffer.seek(0)
-            # Process the buffer (e.g., extract its contents)
+            if WINDOWS and url.endswith("exe"):
+                filename = url.strip("/").rpartition("/")[-1]
+                file = to_dir / filename
+                file.write_bytes(buffer.getvalue())
+                return to_dir
             return extract(buffer=buffer, to_dir=to_dir)
     except KeyboardInterrupt:
         pbar.close()

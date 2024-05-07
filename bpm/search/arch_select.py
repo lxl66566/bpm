@@ -146,14 +146,16 @@ def sort_list(
 @functools.lru_cache()
 def platform_map() -> list:
     plt = platform.system().lower()
-    return in_pair(["darwin", "macos"], plt) or [plt]
+    return (
+        in_pair(["darwin", "macos"], plt) or in_pair(["windows", "win32"], plt) or [plt]
+    )
 
 
 @functools.lru_cache()
 def architecture_map():
     arch = platform.machine().lower()
     return (
-        in_pair(["x86_64", "amd64"], arch)
+        in_pair(["x86_64", "amd64", "x64"], arch)
         or in_pair(["aarch64", "armv8"], arch)
         or [arch]
     )
@@ -203,6 +205,29 @@ class TestSortList(unittest.TestCase):
         assets = select(assets)
         self.assertTrue(multi_in(architecture_map(), assets[0]))
         self.assertTrue(multi_in(platform_map(), assets[0]))
+
+    def test_select_typstyle(self):
+        assets = [
+            "typstyle-alpine-x64",
+            "typstyle-alpine-x64.debug",
+            "typstyle-darwin-arm64",
+            "typstyle-darwin-arm64.dwarf",
+            "typstyle-darwin-x64",
+            "typstyle-darwin-x64.dwarf",
+            "typstyle-linux-arm64",
+            "typstyle-linux-arm64.debug",
+            "typstyle-linux-armhf",
+            "typstyle-linux-armhf.debug",
+            "typstyle-linux-x64",
+            "typstyle-linux-x64.debug",
+            "typstyle-win32-arm64.exe",
+            "typstyle-win32-arm64.pdb",
+            "typstyle-win32-x64.exe",
+            "typstyle-win32-x64.pdb",
+        ]
+        assets = select(assets)
+        if platform.system() == "Windows" and platform.machine() == "AMD64":
+            self.assertTrue(assets[0] == "typstyle-win32-x64.exe")
 
 
 if __name__ == "__main__":
