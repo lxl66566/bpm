@@ -108,6 +108,8 @@ BPM automatically adds the `.old` suffix to existing files to avoid overwrite. T
 
 BPM downloads asset into `%userprofile%/bpm/app/<name>` and creates shortcuts and cmd runner for the executables to `%userprofile%/bpm/bin`, which is added to `%path%`.
 
+After v2.2.7, single `.exe` will be also installed.
+
 ## Develop
 
 ```sh

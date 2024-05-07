@@ -147,7 +147,9 @@ def sort_list(
 def platform_map() -> list:
     plt = platform.system().lower()
     return (
-        in_pair(["darwin", "macos"], plt) or in_pair(["windows", "win32"], plt) or [plt]
+        in_pair(["darwin", "macos"], plt)
+        or in_pair(["windows", "win32", ".exe"], plt)
+        or [plt]
     )
 
 
