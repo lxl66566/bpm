@@ -7,7 +7,10 @@ bin package manager (BPM) 是一个基于 Github release 的包管理器，它�
 BPM 支持 Windows 与 Linux 系统，python 版本 >= 3.9。
 
 > [!CAUTION]
-> 风险提示：BPM Linux 可能会破坏您的计算机。使用 BPM 安装软件即代表您已接受此风险，并信任第三方 Github release 的打包者。
+> 风险提示：注意 BPM Linux 潜在的破坏计算机风险。使用 BPM 安装软件即代表您已接受此风险，并信任第三方 Github release 的打包者。
+
+> [!TIP]
+> BPM 保证对偶性，即 `bpm install` 后立即接 `bpm uninstall` 不会对系统作出任何改变。
 
 ## 为什么有这个项目？
 

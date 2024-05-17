@@ -7,7 +7,10 @@ Bin package manager (BPM) is a Github release-based package manager that allows 
 BPM is currently supported on Linux and Windows, python >= 3.9.
 
 > [!CAUTION]
-> Risk Warning: BPM on Linux may damage your computer. By using BPM to install software, you accept this risk and trust third-party Github release packagers.
+> Risk Warning: Be aware of the potential risk of BPM Linux damaging your computer. By using BPM to install software, you accept this risk and trust third-party Github release packagers.
+
+> [TIP]
+> BPM guarantees parity, i.e., `bpm install` followed immediately by `bpm uninstall` will not change the system in any way.
 
 ## Why use it?
 
