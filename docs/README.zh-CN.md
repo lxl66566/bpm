@@ -29,7 +29,7 @@ BPM 需要安装到 root 用户下。
 #### Linux
 
 ```sh
-sudo pip install bin-package-manager --break-system-packages
+sudo pip install bin-package-manager --break-system-packages -i https://pypi.tuna.tsinghua.edu.cn/simple
 sudo bpm
 ```
 

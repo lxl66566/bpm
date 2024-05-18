@@ -160,30 +160,33 @@ def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
     return True
 
 
-def extract(buffer: io.BytesIO, to_dir: Path) -> Path:
+def extract(buffer: io.BytesIO, to_dir: Path, name: str = "") -> Path:
     """
     extract tar / zip / 7z to dir.
 
     `Returns`: the "main" path of extracted files.
     """
+
+    log.debug(f"extracting `{name}` to `{to_dir}`")
     try:
-        with tarfile.open(fileobj=buffer, mode="r") as file:
-            if not check_if_tar_safe(file):
-                raise TarPathTraversalException
-            file.extractall(path=to_dir)
-    except tarfile.ReadError:
-        buffer.seek(0)
-        try:
+        if name.endswith(".zip"):
             with zipfile.ZipFile(buffer, "r") as file:
                 file.extractall(path=to_dir)
-        except zipfile.BadZipFile:
-            buffer.seek(0)
+        elif name.endswith(".7z"):
             try:
                 import py7zr
             except ImportError:
-                utils.error_exit("cannot extract 7z file without py7zr module.")
-
+                utils.error_exit("cannot extract this file without py7zr module.")
             py7zr.SevenZipFile(buffer, "r").extractall(path=to_dir)
+        else:
+            if ".tar" not in name:
+                log.warning(f"unknown file type: {name}")
+            with tarfile.open(fileobj=buffer, mode="r") as file:
+                if not check_if_tar_safe(file):
+                    raise TarPathTraversalException
+                file.extractall(path=to_dir)
+    except Exception as e:
+        utils.error_exit(f"cannot extract file: {e}")
 
     temp = list(to_dir.glob("*"))
     if len(temp) == 1 and temp[0].is_dir():
@@ -225,12 +228,14 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
                         pbar.update(chunk_bar_size)
 
             buffer.seek(0)
+            filename = url.strip("/").rpartition("/")[-1]
+
+            # if only one exe file
             if WINDOWS and url.endswith("exe"):
-                filename = url.strip("/").rpartition("/")[-1]
                 file = to_dir / filename
                 file.write_bytes(buffer.getvalue())
                 return to_dir
-            return extract(buffer=buffer, to_dir=to_dir)
+            return extract(buffer=buffer, to_dir=to_dir, name=filename)
     except KeyboardInterrupt:
         pbar.close()
         log.warning("Keyboard Cancelled")

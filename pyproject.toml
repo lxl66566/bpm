@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bin-package-manager"
-version = "2.2.7"
+version = "2.2.8"
 description = "Bin package manager, a package manager based on Github release"
 authors = ["lxl66566 <lxl66566@gmail.com>"]
 license = "MIT"
@@ -17,7 +17,7 @@ packages = [{ include = "bpm" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-py7zr = { version = "^0.20.8", markers = "sys_platform == 'win32'" }
+py7zr = "^0.20.8"
 requests = "^2.31.0"
 tqdm = "^4.66.2"
 pylnk3 = { version = "^0.4.2", markers = "sys_platform == 'win32'" }
@@ -32,4 +32,4 @@ bpm = 'bpm.cli:main'
 [[tool.poetry.source]]
 name = "tsinghua-pypi"
 url = "https://pypi.tuna.tsinghua.edu.cn/simple"
-priority = "default"
+priority = "primary"

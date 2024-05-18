@@ -5,8 +5,6 @@ import unittest
 from enum import Enum
 from typing import Optional
 
-from ..utils.exceptions import InvalidAssetError
-
 
 class Combination(Enum):
     """
@@ -109,7 +107,7 @@ def select_list(
 def sort_list(
     sort_list: list[str],
     prompts: list[str],
-    combination=Combination.ALL,
+    combination=Combination.ANY,
     match_pos=MatchPos.ALL,
     case_sensitive=False,
     reverse=True,
@@ -124,8 +122,8 @@ def sort_list(
     ['12', '23', '13']
     >>> sort_list(["12", "13", "23"], ["2"], match_pos=MatchPos.BEGIN)
     ['23', '12', '13']
-    >>> sort_list(["12", "13", "23"], ["2"], match_pos=MatchPos.END)
-    ['12', '13', '23']
+    >>> sort_list(["12", "13", "23"], ["3"], match_pos=MatchPos.END)
+    ['13', '23', '12']
     >>> sort_list(["12", "13", "23"], ["2"], combination=Combination.ANY)
     ['12', '23', '13']
     """
@@ -181,7 +179,12 @@ def select(assets: list):
     assets = sort_list(assets, [".7z"], match_pos=MatchPos.END, reverse=False)
 
     if not assets:
-        raise InvalidAssetError
+        if __name__ == "__main__":
+            raise ValueError("No valid asset found")
+        else:
+            from ..utils.exceptions import InvalidAssetError
+
+            raise InvalidAssetError
     return assets
 
 
@@ -230,6 +233,20 @@ class TestSortList(unittest.TestCase):
         assets = select(assets)
         if platform.system() == "Windows" and platform.machine() == "AMD64":
             self.assertTrue(assets[0] == "typstyle-win32-x64.exe")
+
+    def test_real_sort_list(self):
+        assets = [
+            "fastfetch-linux-amd64.deb",
+            "fastfetch-linux-amd64.rpm",
+            "fastfetch-linux-amd64.tar.gz",
+            "fastfetch-linux-amd64.zip",
+        ]
+        assets = sort_list(
+            assets,
+            [".tar", ".tar.gz", ".tar.xz", ".tar.bz2", ".zip", ".7z"],
+            match_pos=MatchPos.END,
+        )
+        self.assertTrue(assets[0] == "fastfetch-linux-amd64.tar.gz")
 
 
 if __name__ == "__main__":

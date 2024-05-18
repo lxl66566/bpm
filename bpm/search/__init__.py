@@ -14,7 +14,7 @@ import requests
 from ..utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from ..utils.exceptions import AssetNotFoundError, RepoNotFoundError
 from ..utils.input import get_user_choice_classic, user_interrupt
-from .arch_select import multi_in, select, sort_list
+from .arch_select import Combination, MatchPos, multi_in, select, sort_list
 
 
 class RepoHandler:
@@ -234,6 +234,18 @@ class RepoHandler:
         # sort by musl
         if not self.prefer_gnu:
             assets = sort_list(assets, ["musl"])
+
+        # sort by package type
+        # Note that BPM only support .tar.??, .zip and  .7z package type.
+        temp = [".tar", ".tar.gz", ".tar.xz", ".tar.bz2", ".zip", ".7z"]
+        if WINDOWS:
+            temp.append(".exe")
+        assets = sort_list(
+            assets,
+            temp,
+            combination=Combination.ANY,
+            match_pos=MatchPos.END,
+        )
 
         self.asset = assets[0]
         log.info(f"selected asset: {self.asset}")
