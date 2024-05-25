@@ -55,7 +55,7 @@ def cli_install(args):
     for package in args.packages:
         real_name, is_url = parse_name_or_url(package)
         if not args.dry_run and repo_group.find_repo(real_name)[1]:
-            log.info(f"{real_name} is already installed.")
+            log.error(f"{real_name} is already installed.")
             continue
 
         # search
