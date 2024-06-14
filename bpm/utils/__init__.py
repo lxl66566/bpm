@@ -58,6 +58,9 @@ def trace():
 
 
 def ensure_windows_path():
+    """
+    ensure that the bpm's `BIN_PATH` is in windows $PATH environment.
+    """
     assert WINDOWS, "This function only works on Windows."
     if not TEST:
         add_windows_path(BIN_PATH)

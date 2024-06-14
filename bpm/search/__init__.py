@@ -239,7 +239,7 @@ class RepoHandler:
         # Note that BPM only support .tar.??, .zip and  .7z package type.
         temp = [".tar", ".tar.gz", ".tar.xz", ".tar.bz2", ".zip", ".7z"]
         if WINDOWS:
-            temp.append(".exe")
+            temp.extend((".exe", ".msi"))
         assets = sort_list(
             assets,
             temp,

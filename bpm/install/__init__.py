@@ -1,7 +1,9 @@
 import io
 import logging as log
+import os
 import platform
 import shutil
+import subprocess
 import tarfile
 import zipfile
 from contextlib import suppress
@@ -230,8 +232,8 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
             buffer.seek(0)
             filename = url.strip("/").rpartition("/")[-1]
 
-            # if only one exe file
-            if WINDOWS and url.endswith("exe"):
+            # do not extract .exe and .msi file on windows, give it to installer
+            if WINDOWS and (os.path.splitext(url)[-1] in [".exe", ".msi"]):
                 file = to_dir / filename
                 file.write_bytes(buffer.getvalue())
                 return to_dir
@@ -388,6 +390,10 @@ def install_on_windows(
     REPO_PATH = APP_PATH / repo.name
     remove_on_windows(repo.file_list, True)
 
+    # try to install msi package from pkgsrc, avoiding copying
+    if install_msi(pkgsrc):
+        return
+
     # 1. move all files to a folder.
     if utils.TEST:
         pkgdst = pkgsrc
@@ -397,11 +403,11 @@ def install_on_windows(
         log.info(f"Install package to {REPO_PATH}.")
         repo.add_file_list(REPO_PATH)
 
-    flag = False
+    bin_files = []
     for file in pkgdst.rglob(repo.bin_name):
         if not file.is_file():
             continue
-        flag = True
+        bin_files.append(file)
         link_name = file.with_suffix("").name
         # 234. lnk binary files.
         link_path = (BIN_PATH / link_name).with_suffix(".lnk")
@@ -437,10 +443,52 @@ fi
         repo.add_file_list(sh_path)
         log.info(f"Create sh: {file} -> {sh_path}")
 
-    if not flag:
+    if not bin_files:
         log.warning(f"No binary file found in {pkgdst}.")
+    else:
+        print(f"Successfully installed `{repo.name}`.")
+        print(
+            f"You can press `Win+r`, enter {', '.join(map(lambda x: f'`{x.with_suffix("").name}`', bin_files))} to start software, or execute in cmd."
+        )
+
     # ensure windows bin path
     utils.ensure_windows_path()
+
+
+def install_msi(pkgsrc: Path):
+    """
+    Install an MSI package on Windows.
+
+    Args:
+        pkgsrc (Path): The path to the directory containing the MSI package.
+
+    Returns:
+        bool: True if the MSI package is successfully found and opened, False otherwise.
+
+    Raises:
+        AssertionError: If the function is called on a non-Windows platform.
+        AssertionError: If the pkgsrc is not a directory.
+
+    The function searches for MSI files in the `pkgsrc` directory.
+    If there is exactly one MSI file, it opens the MSI package.
+    If no MSI files are found in the `pkgsrc` directory or multiple MSI files are found, it returns False.
+    """
+
+    assert WINDOWS, "This function only supports Windows."
+    pkgsrc = Path(pkgsrc)
+    assert pkgsrc.is_dir(), "pkgsrc must be a directory."
+    if temp := list(pkgsrc.glob("*.msi")):
+        if len(temp) != 1:
+            log.debug(f"multiple msi files found: {temp}, do not install msi.")
+            return False
+        msi_file = temp[0]
+        log.info(f"Start to install {msi_file}. Please install it manually.")
+        subprocess.run(f"msiexec /i {msi_file}", shell=True)
+        log.warn(
+            "Note: this package will not be managed by bpm, but you can still update it from bpm."
+        )
+        return True
+    return False
 
 
 def auto_install(

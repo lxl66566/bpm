@@ -1,5 +1,4 @@
 import logging as log
-from copy import copy
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
@@ -90,15 +89,6 @@ def cli_install(args):
         # install
         try:
             download_and_install(args, repo)
-            print(f"Successfully installed `{repo.name}`.")
-            if WINDOWS:
-                bins = copy(repo.file_list)
-                bins = filter(lambda x: x.endswith(".lnk"), bins)
-                bins = map(lambda x: Path(x).stem, bins)
-                bins = map(lambda x: f"`{x}`", bins)
-                print(
-                    f"You can press `Win+r`, enter {', '.join(bins)} to start software, or execute in cmd."
-                )
             if not args.dry_run:
                 repo_group.insert_repo(repo)
         except Exception as e:

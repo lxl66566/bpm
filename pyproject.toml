@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bin-package-manager"
-version = "2.2.8"
+version = "2.2.9"
 description = "Bin package manager, a package manager based on Github release"
 authors = ["lxl66566 <lxl66566@gmail.com>"]
 license = "MIT"
@@ -30,6 +30,5 @@ build-backend = "poetry.core.masonry.api"
 bpm = 'bpm.cli:main'
 
 [[tool.poetry.source]]
-name = "tsinghua-pypi"
-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+name = "PyPI"
 priority = "primary"

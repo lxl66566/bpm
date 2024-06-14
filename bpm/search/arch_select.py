@@ -232,9 +232,9 @@ class TestSortList(unittest.TestCase):
         ]
         assets = select(assets)
         if platform.system() == "Windows" and platform.machine() == "AMD64":
-            self.assertTrue(assets[0] == "typstyle-win32-x64.exe")
+            self.assertEqual(assets[0], "typstyle-win32-x64.exe")
 
-    def test_real_sort_list(self):
+    def test_sort_fastfetch(self):
         assets = [
             "fastfetch-linux-amd64.deb",
             "fastfetch-linux-amd64.rpm",
@@ -246,7 +246,7 @@ class TestSortList(unittest.TestCase):
             [".tar", ".tar.gz", ".tar.xz", ".tar.bz2", ".zip", ".7z"],
             match_pos=MatchPos.END,
         )
-        self.assertTrue(assets[0] == "fastfetch-linux-amd64.tar.gz")
+        self.assertEqual(assets[0], "fastfetch-linux-amd64.tar.gz")
 
 
 if __name__ == "__main__":
