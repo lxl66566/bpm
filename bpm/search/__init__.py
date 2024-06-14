@@ -10,6 +10,7 @@ from typing import Optional, Union
 from urllib.parse import urljoin, urlparse
 
 import requests
+from pretty_assert import assert_not_in
 
 from ..utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from ..utils.exceptions import AssetNotFoundError, RepoNotFoundError
@@ -34,7 +35,11 @@ class RepoHandler:
 
         self.set(**kwargs)
         if WINDOWS:
-            assert name not in ("app", "bin"), "Invalid repo name."
+            assert_not_in(
+                name,
+                ("app", "bin"),
+                "Invalid repo name: repo name could not be 'app' or 'bin'.",
+            )
 
     def __str__(self) -> str:
         return INFO_BASE_STRING.format(

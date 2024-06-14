@@ -3,6 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
+from pretty_assert import assert_
+
 from .install import auto_install, download_and_extract, extract, remove
 from .search import RepoHandler
 from .storage import repo_group
@@ -181,10 +183,10 @@ def cli_info(args):
 
 
 def cli_alias(args):
-    assert WINDOWS, "Alias command is only supported on Windows."
-    assert (
-        args.old_name != args.new_name
-    ), "Alias name cannot be the same as the original."
+    assert_(WINDOWS, "Alias command is only supported on Windows.")
+    assert_(
+        args.old_name != args.new_name, "Alias name cannot be the same as the original."
+    )
 
     file = list(BIN_PATH.glob(args.old_name + "*"))
     if not file:

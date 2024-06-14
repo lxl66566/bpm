@@ -41,14 +41,6 @@ def error_exit(msg: str):
     sys.exit(1)
 
 
-def assert_exit(condition: bool, msg: str):
-    """
-    Exit with error message if condition is not met.
-    """
-    if not condition:
-        error_exit(msg)
-
-
 def trace():
     """
     Trace back only in debug mode.

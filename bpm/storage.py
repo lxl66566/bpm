@@ -86,7 +86,7 @@ class RepoGroup:
         """
         assert WINDOWS, "alias is not supported on non-Windows systems."
 
-        # only change two files: lnk, cmd
+        # change three files: lnk, cmd, ""
         count = 0
         for repo in self.repos:
             for i, s in enumerate(repo.installed_files):
