@@ -111,7 +111,7 @@ BPM automatically adds the `.old` suffix to existing files to avoid overwrite. T
 
 BPM downloads asset into `%userprofile%/bpm/app/<name>` and creates shortcuts and cmd runner for the executables to `%userprofile%/bpm/bin`, which is added to `%path%`.
 
-After v2.2.7, single `.exe` will be also installed.
+After v2.2.9, single `.exe` and `.msi` can be also downloaded and installed.
 
 ## Develop
 
@@ -130,3 +130,4 @@ poetry run python -m unittest bpm/**/*.py  # run tests
 - [x] offline install
 - [x] install from github link
 - [x] update from local
+- [x] exe and msi support

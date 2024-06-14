@@ -87,7 +87,7 @@ BPM 会自动为已存在的文件添加 `.old` 后缀，以避免覆盖。卸�
 
 BPM 下载文件夹到 `%userprofile%/bpm/app/<name>` 中，并为可执行文件创建快捷方式与 cmd 到 `%userprofile%/bpm/bin`，这个位置会被添加到 `%path%` 中。
 
-v2.2.7 之后，单个 `.exe` 也会被安装。
+v2.2.9 之后支持下载并安装单个 `.exe` 或 `.msi`。
 
 ## 开发
 
@@ -106,3 +106,4 @@ poetry run python -m unittest bpm/**/*.py  # 运行测试
 - [x] offline install
 - [x] install from github link
 - [x] update from local
+- [x] exe and msi support
