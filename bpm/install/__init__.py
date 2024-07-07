@@ -447,8 +447,9 @@ fi
         log.warning(f"No binary file found in {pkgdst}.")
     else:
         print(f"Successfully installed `{repo.name}`.")
+        temp = ", ".join(map(lambda x: f"""`{x.with_suffix("").name}`""", bin_files))
         print(
-            f"You can press `Win+r`, enter {', '.join(map(lambda x: f'`{x.with_suffix("").name}`', bin_files))} to start software, or execute in cmd."
+            f"""You can press `Win+r`, enter {temp} to start software, or execute in cmd."""
         )
 
     # ensure windows bin path
