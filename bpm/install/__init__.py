@@ -8,7 +8,6 @@ import tarfile
 import zipfile
 from contextlib import suppress
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Optional, Union
 
 import requests
@@ -139,7 +138,7 @@ def remove_on_windows(recorder: Optional[list[str]] = None, partial: bool = Fals
         else:
             new_recorder.append(file)
 
-    recorder = reversed(new_recorder)
+    recorder = list(reversed(new_recorder))
 
 
 def remove(recorder: Optional[list[str]] = None):
@@ -177,9 +176,10 @@ def extract(buffer: io.BytesIO, to_dir: Path, name: str = "") -> Path:
         elif name.endswith(".7z"):
             try:
                 import py7zr
+
+                py7zr.SevenZipFile(buffer, "r").extractall(path=to_dir)
             except ImportError:
                 utils.error_exit("cannot extract this file without py7zr module.")
-            py7zr.SevenZipFile(buffer, "r").extractall(path=to_dir)
         else:
             if ".tar" not in name:
                 log.warning(f"unknown file type: {name}")
@@ -239,7 +239,9 @@ def download_and_extract(url: str, to_dir: Path) -> Path:
                 return to_dir
             return extract(buffer=buffer, to_dir=to_dir, name=filename)
     except KeyboardInterrupt:
-        pbar.close()
+        # suppressed not binding lint
+        with suppress(NameError):
+            pbar.close()  # type: ignore
         log.warning("Keyboard Cancelled")
         exit(1)
 
@@ -285,7 +287,7 @@ def install_on_linux(
             log.debug(f"already installed {p.name}")
             return
         install_to(p, pkgdst / "usr/bin", mode=0o755)
-        install_bin.called = True
+        install_bin.called = True  # type: ignore
 
     def install_service(p: Path):
         """Install service file."""
@@ -362,7 +364,7 @@ def install_on_linux(
         install_service(file)
 
     # check binary
-    if not any(map(lambda x: x.startswith("/usr/bin"), recorder)):
+    if not any(map(lambda x: x.startswith("/usr/bin"), recorder or [])):
         log.warning("No binary file found, please check the release package.")
 
 
@@ -381,7 +383,8 @@ def install_on_windows(
     """
     assert WINDOWS, "This function only supports Windows."
 
-    from pylnk3 import for_file
+    # pylink3 only available on windows
+    from pylnk3 import for_file  # type: ignore
 
     pkgsrc = Path(pkgsrc)
 
@@ -509,124 +512,3 @@ def auto_install(
         install_on_windows(repo, pkgsrc)
     else:
         raise NotImplementedError(f"{platform.system()} is not supported now.")
-
-
-import unittest  # noqa: E402
-
-
-class Test(unittest.TestCase):
-    def test_rename_old_and_rev(self):
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            test = tmp_dir / "test1"
-            test.touch()
-            rename_old(test)
-            self.assertTrue(test.with_suffix(".old").exists())
-            self.assertFalse(test.exists())
-            rename_old_rev(test)
-            self.assertTrue(test.exists())
-
-    def test_merge_dir(self):
-        def make_test_dirs(tmp_dir):
-            tmp_dir = Path(tmp_dir)
-            test1 = tmp_dir / "test1"
-            test2 = tmp_dir / "test2"
-            test1.mkdir()
-            test2.mkdir()
-            file = test1 / "file"
-            file.write_text("Hello")
-            subfile = test1 / "folder" / "subfile"
-            subfile.parent.mkdir(parents=True)
-            subfile.write_text("World")
-            overwrite1 = test1 / "overwrite"
-            overwrite2 = test2 / "overwrite"
-            overwrite1.write_text("123")
-            overwrite2.write_text("456")
-            return test1, test2
-
-        with TemporaryDirectory() as tmp_dir:
-            test1, test2 = make_test_dirs(tmp_dir)
-            myrecorder = []
-            merge_dir(test1, test2, recorder=myrecorder)
-
-            self.assertEqual((test2 / "file").read_text(), "Hello")
-            self.assertEqual((test2 / "folder/subfile").read_text(), "World")
-            self.assertEqual((test2 / "overwrite").read_text(), "123")
-            self.assertEqual((test2 / "overwrite.old").read_text(), "456")
-
-            print("recorder:", myrecorder)
-            restore(myrecorder)
-            self.assertEqual((test2 / "overwrite").read_text(), "456")
-
-        with TemporaryDirectory() as tmp_dir:
-            test1, test2 = make_test_dirs(tmp_dir)
-            merge_dir(test1, test2, rename=False)
-            self.assertFalse((test2 / "overwrite.old").exists())
-
-    def test_extract(self):
-        src_path = Path(__file__).parent.parent.parent.resolve() / "tests"
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            with (src_path / "noroot.tar.gz").open("rb") as f:
-                main = extract(f, tmp_dir)
-                self.assertEqual(main, tmp_dir)
-                self.assertTrue((main / "1").exists())
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            with (src_path / "root.tar.gz").open("rb") as f:
-                main = extract(f, tmp_dir)
-                self.assertEqual(main, tmp_dir / "root")
-                self.assertTrue((main / "1").exists())
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            with (src_path / "noroot.zip").open("rb") as f:
-                main = extract(f, tmp_dir)
-                self.assertEqual(main, tmp_dir)
-                self.assertTrue((main / "1").exists())
-
-    @utils.with_test
-    def test_dry_run(self):
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            src = tmp_dir / "src"
-            dst = tmp_dir / "dst"
-            src.touch()
-            install(src, dst)
-            self.assertFalse(dst.exists())
-
-    def simulate_install(self):
-        with TemporaryDirectory() as tmp_dir:
-            tmp_dir = Path(tmp_dir)
-            src = tmp_dir / "src"
-            dst = tmp_dir / "dst"
-            usr = dst / "usr"
-            bin = usr / "bin"
-            fish_completion = dst / "usr/share/fish/vendor_completions.d"
-            bash_completion = dst / "usr/share/bash-completion/completions"
-            zsh_completion = dst / "usr/share/zsh/site-functions"
-            src.mkdir()
-            bin.mkdir(parents=True, exist_ok=True)
-            fish_completion.mkdir(parents=True, exist_ok=True)
-            bash_completion.mkdir(parents=True, exist_ok=True)
-            zsh_completion.mkdir(parents=True, exist_ok=True)
-            main = download_and_extract(
-                "https://github.com/eza-community/eza/releases/download/v0.17.2/eza_x86_64-unknown-linux-musl.tar.gz",
-                src,
-            )
-            install_on_linux(main, "eza", pkgdst=dst)
-            self.assertTrue((bin / "eza").exists())
-
-            main = download_and_extract(
-                "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
-                src,
-            )
-            install_on_linux(main, "rg", pkgdst=dst)
-            for i in usr.rglob("*"):
-                log.debug(i) if i.is_file() else None
-            self.assertTrue((bin / "rg").exists())
-            self.assertTrue((fish_completion / "rg.fish").exists())
-
-
-if __name__ == "__main__":
-    log.basicConfig(level=log.DEBUG)
-    unittest.main()

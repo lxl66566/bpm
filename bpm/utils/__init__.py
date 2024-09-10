@@ -55,10 +55,10 @@ def ensure_windows_path():
     """
     assert WINDOWS, "This function only works on Windows."
     if not TEST:
-        add_windows_path(BIN_PATH)
+        add_windows_path(str(BIN_PATH))
 
 
-def windows_path_to_windows_bash(p: Union[WindowsPath, str]) -> str:
+def windows_path_to_windows_bash(p: Union[WindowsPath, Path, str]) -> str:
     """
     convert a windows path to posix path string. example:
 
@@ -71,7 +71,7 @@ def windows_path_to_windows_bash(p: Union[WindowsPath, str]) -> str:
     )
 
 
-def windows_path_to_wsl(p: Union[WindowsPath, str]) -> str:
+def windows_path_to_wsl(p: Union[WindowsPath, Path, str]) -> str:
     """
     convert a windows path to wsl path string. example:
 
@@ -107,24 +107,3 @@ def with_test(func):
         return result
 
     return warpper
-
-
-import unittest  # noqa: E402
-
-
-class Test(unittest.TestCase):
-    def test_windows_path_convert(self):
-        if not WINDOWS:
-            return
-        self.assertEqual(
-            windows_path_to_windows_bash(r"C:\Users\lxl\bpm\bin"),
-            "/c/Users/lxl/bpm/bin",
-        )
-        self.assertEqual(
-            windows_path_to_wsl(r"C:\Users\lxl\bpm\bin"),
-            "/mnt/c/Users/lxl/bpm/bin",
-        )
-
-
-if __name__ == "__main__":
-    unittest.main()

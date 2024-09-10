@@ -17,11 +17,14 @@ packages = [{ include = "bpm" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-py7zr = "^0.20.8"
+py7zr = "^0.22.0"
 requests = "^2.31.0"
-tqdm = "^4.66.2"
+tqdm = "^4.66.5"
 pylnk3 = { version = "^0.4.2", markers = "sys_platform == 'win32'" }
 pretty-assert = "^0.1.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.2"
 
 [build-system]
 requires = ["poetry-core"]

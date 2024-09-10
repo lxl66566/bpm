@@ -4,8 +4,9 @@ import pickle
 from contextlib import suppress
 from pathlib import Path
 from pprint import pprint
-from tempfile import TemporaryDirectory
 from typing import Optional, Union
+
+from pretty_assert import assert_
 
 from .search import RepoHandler
 from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, WINDOWS
@@ -57,7 +58,7 @@ class RepoGroup:
             pprint(vars(result))
             return result
         else:
-            raise RepoNotFoundError(getattr(repo, "name", repo))
+            raise RepoNotFoundError(str(getattr(repo, "name", repo)))
 
     def insert_repo(self, repo: RepoHandler):
         """
@@ -73,10 +74,11 @@ class RepoGroup:
         """
         index, result = self.find_repo(repo)
         if result:
-            self.repos.pop(index)
+            res = self.repos.pop(index)
             self.save()
+            return res
         else:
-            raise RepoNotFoundError(getattr(repo, "name", repo))
+            raise RepoNotFoundError(str(getattr(repo, "name", repo)))
 
     def alias_lnk(self, old_name: str, new_name: str):
         """
@@ -91,7 +93,7 @@ class RepoGroup:
         for repo in self.repos:
             for i, s in enumerate(repo.installed_files):
                 s = Path(s)
-                assert s.exists(), "file in installed_list not found: " + s
+                assert_(s.exists(), f"file in installed_list not found: {s}")  # type: ignore
                 if s.is_dir():
                     continue
                 if s.stem == old_name and s.suffix in (".lnk", ".cmd", ""):
@@ -107,31 +109,4 @@ class RepoGroup:
         )
 
 
-import unittest  # noqa: E402
-
-
-class Test(unittest.TestCase):
-    def test_repogroup_operations(self):
-        with TemporaryDirectory() as tmpdir:
-            tmpdir = Path(tmpdir) / "repos.db"
-            test_group = RepoGroup(db_path=tmpdir)
-            # insert, save
-            test_group.insert_repo(RepoHandler("test_repo"))
-            test_group.insert_repo(RepoHandler("abc"))
-            test_group.insert_repo(RepoHandler("z"))
-            test_group.repos.clear()
-            # read
-            test_group.read()
-            self.assertListEqual(
-                ["abc", "test_repo", "z"], [r.name for r in test_group.repos]
-            )
-            # remove
-            test_group.remove_repo("test_repo")
-            self.assertListEqual(["abc", "z"], [r.name for r in test_group.repos])
-
-
-if __name__ == "__main__":
-    unittest.main()
-    exit(0)
-else:
-    repo_group = RepoGroup()
+repo_group = RepoGroup()

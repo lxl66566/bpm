@@ -4,6 +4,7 @@ import logging as log
 import posixpath
 import sys
 import unittest
+from contextlib import suppress
 from functools import reduce
 from pprint import pprint
 from typing import Optional, Union
@@ -38,7 +39,7 @@ class RepoHandler:
             assert_not_in(
                 name,
                 ("app", "bin"),
-                "Invalid repo name: repo name could not be 'app' or 'bin'.",
+                "Invalid repo name: repo name could not be 'app' or 'bin'.",  # type: ignore
             )
 
     def __str__(self) -> str:
@@ -50,7 +51,10 @@ class RepoHandler:
         return self.name < other.name
 
     def __eq__(self, __value: object) -> bool:
-        return self.name == __value.name
+        with suppress(AttributeError):
+            # suppressed
+            return self.name == __value.name  # type: ignore
+        return False
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -116,7 +120,7 @@ class RepoHandler:
         # why does https://t.me/withabsolutex/1479 happens?
         r = fullname.strip("/").split("/")
         assert len(r) == 2, "parsing invalid fullname"
-        return tuple(r)
+        return tuple(r)  # type: ignore
 
     @staticmethod
     def get_info_by_url(url: str):
@@ -208,7 +212,7 @@ class RepoHandler:
         assert self.url is not None, "use ask() before get_asset"
         api = urljoin(
             self.api_base,
-            posixpath.join("repos", self.repo_owner, self.repo_name, "releases"),
+            posixpath.join("repos", self.repo_owner, self.repo_name, "releases"),  # type: ignore
         )
 
         r: list = requests.get(api).json()
