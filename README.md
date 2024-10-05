@@ -50,19 +50,16 @@ You can use pipx to install BPM.
 sudo pipx install bin-package-manager
 ```
 
-pipx will only install for the current user, so `sudo` is required. Alternatively, you can track on [this issue](https://github.com/pypa/pipx/issues/754) and use other methods mentioned there.
+pipx will only install for the current user, but bpm needs to run as root. So `sudo` is required. Alternatively, you can track on [this issue](https://github.com/pypa/pipx/issues/754) and use other methods mentioned there.
 
 ### Source code
 
-If you don't want to use pipx, you can also download and use the source code.
-
-BPM requires [these libs](./requirements.txt), please install them manually.
+If you don't want to use pipx, you can also download and use the source code. Make sure the package manager [uv](https://docs.astral.sh/uv/) has been installed.
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git
 cd bpm
-python3 -m bpm
-# or use poetry to install dependencies and run: `poetry install && poetry run python -m bpm`
+uv run python -m bpm
 ```
 
 ## Usage

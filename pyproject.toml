@@ -1,38 +1,45 @@
-[tool.poetry]
+[project]
 name = "bin-package-manager"
-version = "2.2.10"
+version = "2.2.11"
 description = "Bin package manager, a package manager based on Github release"
-authors = ["lxl66566 <lxl66566@gmail.com>"]
+authors = [{ name = "lxl66566", email = "lxl66566@gmail.com" }]
 license = "MIT"
-readme = ["README.md"]
+readme = "README.md"
 keywords = ["binary", "packaging", "release"]
-repository = "https://github.com/lxl66566/bpm"
-homepage = "https://github.com/lxl66566/bpm"
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.9",
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
-packages = [{ include = "bpm" }]
+requires-python = ">=3.9"
+dependencies = [
+  "pretty-assert>=0.1.1",
+  "py7zr>=0.22.0",
+  "pylnk3>=0.4.2",
+  "requests>=2.32.3",
+  "tqdm>=4.66.5",
+]
 
-[tool.poetry.dependencies]
-python = "^3.9"
-py7zr = "^0.22.0"
-requests = "^2.31.0"
-tqdm = "^4.66.5"
-pylnk3 = { version = "^0.4.2", markers = "sys_platform == 'win32'" }
-pretty-assert = "^0.1.1"
+[tool.uv]
+dev-dependencies = ["pytest>=8.3.3"]
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
+[project.urls]
+Repository = "https://github.com/lxl66566/bpm"
+Homepage = "https://github.com/lxl66566/bpm"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.scripts]
-bpm = 'bpm.cli:main'
+[tool.hatch.build.targets.wheel]
+packages = ["bpm"]
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
+[project.scripts]
+bpm = "bpm.cli:main"
+
+[tool.hatch.build.targets.sdist]
+include = ["/bpm"]

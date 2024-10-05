@@ -50,19 +50,16 @@ bpm
 sudo pipx install bin-package-manager
 ```
 
-pipx 仅会为当前用户安装，因此需要使用 `sudo pipx`。或者，您可以跟踪[此 issue](https://github.com/pypa/pipx/issues/754) 并使用其中提到的方法。
+pipx 仅会为当前用户安装，而 bpm 本身需要以 root 运行，因此需要使用 `sudo pipx`。或者，您可以跟踪[此 issue](https://github.com/pypa/pipx/issues/754) 并使用其中提到的方法。
 
 ### 源码
 
-如果您不希望使用 pipx，也可以下载并使用源码。
-
-BPM 依赖[这些库](../requirements.txt)，请手动安装。
+如果您不希望使用 pipx，也可以克隆并使用源码。请确保 [uv](https://docs.astral.sh/uv/) 已安装，这是一个 python 的包管理器。
 
 ```sh
 git clone https://github.com/lxl66566/bpm.git
 cd bpm
-python3 -m bpm
-# 或者使用 poetry 安装依赖并运行: `poetry install && poetry run python -m bpm`
+uv run python -m bpm
 ```
 
 ## 使用
