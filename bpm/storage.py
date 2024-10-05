@@ -109,4 +109,4 @@ class RepoGroup:
         )
 
 
-repo_group = RepoGroup()
+repo_group = RepoGroup()  # singleton

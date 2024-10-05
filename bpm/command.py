@@ -155,13 +155,13 @@ def cli_update(args):
         num = len(repo_group.repos)
         for repo in repo_group.repos:
             update(repo)
+            repo_group.save()
     else:  # update some
         num = len(args.packages)
         for name in args.packages:
             _, repo = repo_group.find_repo(name)
             if repo:
                 update(repo)
-                repo_group.save()
             else:
                 failed.append(name)
                 log.error(f"Package `{name}` not found.")
