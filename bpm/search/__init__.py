@@ -10,12 +10,14 @@ from pprint import pprint
 from typing import Optional, Union
 from urllib.parse import urljoin, urlparse
 
+import questionary
+import questionary.question
 import requests
 from pretty_assert import assert_not_in
 
 from ..utils.constants import INFO_BASE_STRING, OPTION_REPO_NUM, WINDOWS
 from ..utils.exceptions import AssetNotFoundError, RepoNotFoundError
-from ..utils.input import get_user_choice_classic, user_interrupt
+from ..utils.input import user_interrupt
 from .arch_select import Combination, MatchPos, multi_in, select, sort_list
 
 
@@ -229,8 +231,7 @@ class RepoHandler:
         assets: list[str] = [x["browser_download_url"] for x in r[0]["assets"]]
 
         if interactive:
-            self.asset = get_user_choice_classic(assets, "please choose an asset:")
-            log.info(f"selected asset: {self.asset}")
+            self.asset = questionary.select("please choose an asset:", assets).ask()
             return self
 
         # user filter

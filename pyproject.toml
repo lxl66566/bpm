@@ -20,6 +20,7 @@ dependencies = [
   "pretty-assert>=0.1.1",
   "py7zr>=1.0.0",
   "pylnk3>=0.4.2",
+  "questionary>=2.1.0",
   "requests>=2.32.3",
   "tqdm>=4.66.5",
 ]
