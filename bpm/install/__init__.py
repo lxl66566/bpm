@@ -43,7 +43,8 @@ def install(
     """
 
     def record():
-        recorder is not None and recorder.append(str(_to.absolute()))
+        if recorder is not None:
+            recorder.append(str(_to.absolute()))
 
     if utils.TEST:
         log.info(f"dry run: {_to}")
@@ -64,7 +65,8 @@ def install(
     shutil.copy2(_from, _to)
     log.info(f"{_from} -> {_to}")
     record()
-    mode and _to.chmod(mode)
+    if mode:
+        _to.chmod(mode)
 
 
 def merge_dir(
@@ -125,9 +127,9 @@ def remove_on_windows(recorder: Optional[list[str]] = None, partial: bool = Fals
     while recorder:
         file = Path(recorder.pop())
         # all bpm data should be stored inside CONF_PATH.
-        assert file.is_relative_to(
-            CONF_PATH
-        ), f"UNSAFE REMOVE! trying to remove: {file}"
+        assert file.is_relative_to(CONF_PATH), (
+            f"UNSAFE REMOVE! trying to remove: {file}"
+        )
 
         if file.is_dir():
             shutil.rmtree(file)
@@ -421,9 +423,9 @@ def install_on_windows(
             log.info(f"dry run: Create cmd: {file} -> {cmd_path}")
             log.info(f"dry run: Create sh: {file} -> {cmd_path}")
             continue
-        link_path.exists() and link_path.unlink()
-        cmd_path.exists() and cmd_path.unlink()
-        sh_path.exists() and sh_path.unlink()
+        _ = link_path.exists() and link_path.unlink()
+        _ = cmd_path.exists() and cmd_path.unlink()
+        _ = sh_path.exists() and sh_path.unlink()
 
         for_file(str(file), str(link_path))
         repo.add_file_list(link_path)
@@ -488,7 +490,7 @@ def install_msi(pkgsrc: Path):
         msi_file = temp[0]
         log.info(f"Start to install {msi_file}. Please install it manually.")
         subprocess.run(f"msiexec /i {msi_file}", shell=True)
-        log.warn(
+        log.warning(
             "Note: this package will not be managed by bpm, but you can still update it from bpm."
         )
         return True

@@ -26,9 +26,9 @@ class RepoHandler:
         self.site = "github"
         self.repo_name = None
         self.repo_owner = None
-        self.asset = None
+        self.asset: Optional[str] = None
         self.asset_filter = []
-        self.version = None
+        self.version: Optional[str] = None
         self.installed_files: list[str] = []
         self.prefer_gnu: bool = False
         self.no_pre: bool = False
@@ -138,7 +138,7 @@ class RepoHandler:
         self.repo_name = info[1]
         return self
 
-    def search(self, page=1, sort=None) -> Optional[list[str]]:
+    def search(self, page=1, sort: Optional[str] = None) -> Optional[list[str]]:
         """
         get the 5 top repos to download
 
@@ -167,7 +167,7 @@ class RepoHandler:
             r.raise_for_status()
 
     @user_interrupt
-    def ask(self, quiet: bool = False, sort=None):
+    def ask(self, quiet: bool = False, sort: Optional[str] = None):
         """
         ask what repo to install.
         please call `search()` before ask.
@@ -181,7 +181,7 @@ class RepoHandler:
                 log.info(f"auto select repo: {repo_selections[0]}")
                 return self.set_by_url(repo_selections[0])
             for i, item in enumerate(repo_selections):
-                print(f"{i+1}: {item}")
+                print(f"{i + 1}: {item}")
             try:
                 temp = input(
                     "please select a repo to download (default 1), `m` for more, `p` for previous: "
@@ -266,6 +266,7 @@ class RepoHandler:
 
         `Returns`: `None` if has no update, `(old_version, new_version)` if has update.
         """
+        assert self.version
         old_version = self.version
         if not old_version:
             return None, None

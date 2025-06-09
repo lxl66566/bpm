@@ -1,3 +1,4 @@
+import io
 import logging as log
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -30,8 +31,10 @@ def download_and_install(args, repo: RepoHandler, rename=True):
             tmp_dir = Path(tmp_dir)
             if args.local:
                 with Path(args.local).open("rb") as f:
-                    main_path = extract(f, tmp_dir)
+                    buffer = io.BytesIO(f.read())
+                    main_path = extract(buffer, tmp_dir)
             else:
+                assert repo.asset
                 main_path = download_and_extract(repo.asset, tmp_dir)
             auto_install(repo, main_path, rename=rename)
     except Exception as e:
@@ -115,7 +118,7 @@ def cli_remove(args):
             log.info(
                 f"""Removing `{package}`{" in soft mode" if args.soft else ""}..."""
             )
-            args.soft or remove(repo.file_list)
+            _ = args.soft or remove(repo.file_list)
             repo_group.remove_repo(package)
         except Exception as e:
             failed.append(package)
@@ -124,7 +127,7 @@ def cli_remove(args):
             continue
         log.info(f"`{package}` removed successfully.")
     log.info(
-        f"Removing complete. Total: {len(args.packages)}, Success: {len(args.packages)-len(failed)}"
+        f"Removing complete. Total: {len(args.packages)}, Success: {len(args.packages) - len(failed)}"
     )
     if failed:
         log.info(f"Failed list: {failed}")
@@ -166,7 +169,7 @@ def cli_update(args):
                 failed.append(name)
                 log.error(f"Package `{name}` not found.")
 
-    log.info(f"Update complete. Total: {num}, Success: {num-len(failed)}")
+    log.info(f"Update complete. Total: {num}, Success: {num - len(failed)}")
     if failed:
         log.info(f"Failed: {failed}")
 
@@ -183,9 +186,10 @@ def cli_info(args):
 
 
 def cli_alias(args):
-    assert_(WINDOWS, "Alias command is only supported on Windows.")
+    assert_(WINDOWS, "Alias command is only supported on Windows.")  # type: ignore
     assert_(
-        args.old_name != args.new_name, "Alias name cannot be the same as the original."
+        args.old_name != args.new_name,
+        "Alias name cannot be the same as the original.",  # type: ignore
     )
 
     file = list(BIN_PATH.glob(args.old_name + "*"))
@@ -194,9 +198,9 @@ def cli_alias(args):
         exit(1)
     if len(file) > 1:
         name = file[0].with_suffix("")
-        assert name == file[1].with_suffix(
-            ""
-        ), "Both lnk should point to the same file."
+        assert name == file[1].with_suffix(""), (
+            "Both lnk should point to the same file."
+        )
 
     repo_group.alias_lnk(args.old_name, args.new_name)
     log.info(f"Alias `{args.old_name}` to `{args.new_name}`.")

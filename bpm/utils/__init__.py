@@ -23,7 +23,7 @@ def is_root() -> bool:
     """
     only linux needs root.
     """
-    if LINUX and os.geteuid() != 0:
+    if LINUX and os.geteuid() != 0:  # type: ignore
         return False
     return True
 

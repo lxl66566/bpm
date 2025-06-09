@@ -18,7 +18,7 @@ classifiers = [
 requires-python = ">=3.9"
 dependencies = [
   "pretty-assert>=0.1.1",
-  "py7zr>=0.22.0",
+  "py7zr>=1.0.0",
   "pylnk3>=0.4.2",
   "requests>=2.32.3",
   "tqdm>=4.66.5",
