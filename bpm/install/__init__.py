@@ -181,7 +181,9 @@ def extract(buffer: io.BytesIO, to_dir: Path, name: str = "") -> Path:
 
                 py7zr.SevenZipFile(buffer, "r").extractall(path=to_dir)
             except ImportError:
-                utils.error_exit("cannot extract this file without py7zr module.")
+                utils.error_exit(
+                    "Cannot extract this file without py7zr module. If you installed bpm with pip, please run `pip install py7zr` to install py7zr, then retry."
+                )
         else:
             if ".tar" not in name:
                 log.warning(f"unknown file type: {name}")

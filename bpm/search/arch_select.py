@@ -49,7 +49,7 @@ class MatchPos(Enum):
             raise ValueError("Unknown MatchPos")
 
 
-def multi_in(parts: list, total: str):
+def multi_in(parts: list[str], total: str):
     """
     return any strings in the list is a part of one string.
     """
@@ -175,7 +175,7 @@ def select(assets: list):
     log.debug(f"architecture filter: {architecture_map()}")
     assets = select_list(assets, architecture_map(), Combination.ANY)
 
-    # 3. put 7z in the end because linux users may not install p7zip
+    # 3. put 7z in the end because linux users may not install py7zr
     assets = sort_list(assets, [".7z"], match_pos=MatchPos.END, reverse=False)
 
     if not assets:
@@ -195,7 +195,7 @@ class TestSortList(unittest.TestCase):
     def test_multi_in(self):
         self.assertTrue(multi_in(["a", "b"], "a"))
         self.assertTrue(multi_in(["win", "windo"], "windals"))
-        self.assertTrue(multi_in("123", "1234"))
+        self.assertTrue(multi_in(["123"], "1234"))
         self.assertFalse(multi_in(["13", "14"], "1234"))
 
     def test_select(self):

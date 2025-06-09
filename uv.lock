@@ -8,7 +8,6 @@ version = "2.2.11"
 source = { editable = "." }
 dependencies = [
     { name = "pretty-assert" },
-    { name = "py7zr" },
     { name = "pylnk3" },
     { name = "questionary" },
     { name = "requests" },
@@ -17,13 +16,13 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "py7zr" },
     { name = "pytest" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "pretty-assert", specifier = ">=0.1.1" },
-    { name = "py7zr", specifier = ">=1.0.0" },
     { name = "pylnk3", specifier = ">=0.4.2" },
     { name = "questionary", specifier = ">=2.1.0" },
     { name = "requests", specifier = ">=2.32.3" },
@@ -31,7 +30,10 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3.3" }]
+dev = [
+    { name = "py7zr", specifier = ">=1.0.0" },
+    { name = "pytest", specifier = ">=8.3.3" },
+]
 
 [[package]]
 name = "brotli"

@@ -115,8 +115,8 @@ After v2.2.9, single `.exe` and `.msi` can be also downloaded and installed.
 ```sh
 git clone https://github.com/lxl66566/bpm.git
 cd bpm
-poetry install
-poetry run python -m unittest bpm/**/*.py  # run tests
+uv sync
+uv run pytest
 ```
 
 ## TODO
