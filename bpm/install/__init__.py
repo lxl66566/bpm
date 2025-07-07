@@ -8,7 +8,7 @@ import tarfile
 import zipfile
 from contextlib import suppress
 from pathlib import Path
-from typing import Optional, Union
+from typing import BinaryIO, Optional, Union
 
 import requests
 import tqdm
@@ -163,7 +163,7 @@ def check_if_tar_safe(tar_file: tarfile.TarFile) -> bool:
     return True
 
 
-def extract(buffer: io.BytesIO, to_dir: Path, name: str = "") -> Path:
+def extract(buffer: BinaryIO, to_dir: Path, name: str = "") -> Path:
     """
     extract tar / zip / 7z to dir.
 

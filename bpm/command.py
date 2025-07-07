@@ -1,4 +1,3 @@
-import io
 import logging as log
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -31,8 +30,7 @@ def download_and_install(args, repo: RepoHandler, rename=True):
             tmp_dir = Path(tmp_dir)
             if args.local:
                 with Path(args.local).open("rb") as f:
-                    buffer = io.BytesIO(f.read())
-                    main_path = extract(buffer, tmp_dir)
+                    main_path = extract(f, tmp_dir, Path(args.local).name)
             else:
                 assert repo.asset
                 main_path = download_and_extract(repo.asset, tmp_dir)

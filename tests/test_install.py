@@ -1,4 +1,3 @@
-import io
 import logging as log
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -74,19 +73,19 @@ class TestInstall:
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
             with (assets_path / "noroot.tar.gz").open("rb") as f:
-                main = extract(io.BytesIO(f.read()), tmp_dir, "noroot.tar.gz")
+                main = extract(f, tmp_dir, "noroot.tar.gz")
                 assert_eq(main, tmp_dir)
                 assert_((main / "1").exists())
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
             with (assets_path / "root.tar.gz").open("rb") as f:
-                main = extract(io.BytesIO(f.read()), tmp_dir, "root.tar.gz")
+                main = extract(f, tmp_dir, "root.tar.gz")
                 assert_eq(main, tmp_dir / "root")
                 assert_((main / "1").exists())
         with TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
             with (assets_path / "noroot.zip").open("rb") as f:
-                main = extract(io.BytesIO(f.read()), tmp_dir, "noroot.zip")
+                main = extract(f, tmp_dir, "noroot.zip")
                 assert_eq(main, tmp_dir)
                 assert_((main / "1").exists())
 

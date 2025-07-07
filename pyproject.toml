@@ -26,6 +26,7 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = ["pytest>=8.3.3", "py7zr>=1.0.0"]
+# index-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 
 [project.urls]
 Repository = "https://github.com/lxl66566/bpm"
