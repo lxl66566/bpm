@@ -13,7 +13,8 @@ elif platform.system() == "Windows":
 else:
     raise NotImplementedError("Unsupported platform")
 
-DATABASE_PATH = CONF_PATH / "bpm.db"
+OLD_DATABASE_PATH = CONF_PATH / "bpm.db"
+DATABASE_PATH = CONF_PATH / "db.json"
 INFO_BASE_STRING = "{:20} {:50} {:20}"
 OPTION_REPO_NUM = 7  # the number of repos to select in asking
 

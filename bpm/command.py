@@ -144,6 +144,7 @@ def cli_update(args):
                     f"`{repo.name}` has an update: {result[0]} -> {result[1]}. Updating..."
                 )
                 download_and_install(args, repo, rename=False)
+                repo.version = result[1]
                 log.info(f"`{repo.name}` updated successfully.")
             else:
                 log.info(f"`{repo.name}` is the newest.")
@@ -156,7 +157,6 @@ def cli_update(args):
         num = len(repo_group.repos)
         for repo in repo_group.repos:
             update(repo)
-            repo_group.save()
     else:  # update some
         num = len(args.packages)
         for name in args.packages:
@@ -166,6 +166,7 @@ def cli_update(args):
             else:
                 failed.append(name)
                 log.error(f"Package `{name}` not found.")
+    repo_group.save()
 
     log.info(f"Update complete. Total: {num}, Success: {num - len(failed)}")
     if failed:

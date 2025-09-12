@@ -1,7 +1,7 @@
 import bisect
+import json
 import logging as log
 import pickle
-from contextlib import suppress
 from pathlib import Path
 from pprint import pprint
 from typing import Optional, Union
@@ -9,7 +9,7 @@ from typing import Optional, Union
 from pretty_assert import assert_
 
 from .search import RepoHandler
-from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, WINDOWS
+from .utils.constants import DATABASE_PATH, INFO_BASE_STRING, OLD_DATABASE_PATH, WINDOWS
 from .utils.exceptions import RepoNotFoundError
 
 
@@ -21,13 +21,25 @@ class RepoGroup:
         self.read()
 
     def read(self):
-        with suppress(FileNotFoundError):
-            self.repos = pickle.loads(self.db_path.read_bytes())
+        try:
+            try:
+                self.repos = list(
+                    map(RepoHandler.from_dict, json.loads(self.db_path.read_text()))
+                )
+            except (json.JSONDecodeError, UnicodeDecodeError, FileNotFoundError):
+                log.info("fallback to pickle")
+                self.repos = pickle.loads(OLD_DATABASE_PATH.read_bytes())
+        except FileNotFoundError:
+            log.warning("database not found. use a clean database instead.")
         return self
 
     def save(self):
+        log.info(f"save db to {self.db_path}")
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.db_path.write_bytes(pickle.dumps(self.repos))
+        # self.db_path.write_bytes(pickle.dumps(self.repos))
+        self.db_path.write_text(
+            json.dumps(list(map(lambda x: x.to_dict(), self.repos)))
+        )
 
     def info_repos(self):
         print(INFO_BASE_STRING.format("Name", "Url", "Version"))

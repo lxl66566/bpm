@@ -23,9 +23,9 @@ from .arch_select import Combination, MatchPos, multi_in, select, sort_list
 
 class RepoHandler:
     def __init__(self, name: str, **kwargs):
-        self.name = name
-        self.bin_name = name
-        self.site = "github"
+        self.name: str = name
+        self.bin_name: str = name
+        self.site: str = "github"
         self.repo_name = None
         self.repo_owner = None
         self.asset: Optional[str] = None
@@ -43,6 +43,31 @@ class RepoHandler:
                 ("app", "bin"),
                 "Invalid repo name: repo name could not be 'app' or 'bin'.",  # type: ignore
             )
+
+    _SERIALIZED_FIELDS = [
+        "name",
+        "bin_name",
+        "site",
+        "repo_name",
+        "repo_owner",
+        "asset",
+        "asset_filter",
+        "version",
+        "installed_files",
+        "prefer_gnu",
+        "no_pre",
+        "one_bin",
+    ]
+
+    def to_dict(self) -> dict:
+        return {k: getattr(self, k) for k in self._SERIALIZED_FIELDS}
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "RepoHandler":
+        if "name" not in data:
+            raise ValueError("cannot deserialize RepoHandler without name")
+        name = data.pop("name")
+        return cls(name=name, **data)
 
     def __str__(self) -> str:
         return INFO_BASE_STRING.format(
