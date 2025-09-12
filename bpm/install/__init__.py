@@ -441,9 +441,9 @@ def install_on_windows(
         sh_path.write_bytes(
             f"""#!/bin/sh
 if [ "$(uname)" != "Linux" ]; then
-    "{utils.windows_path_to_windows_bash(file)}" $@
+    "{utils.windows_path_to_windows_bash(file)}" "$@"
 else
-    "{utils.windows_path_to_wsl(file)}" $@
+    "{utils.windows_path_to_wsl(file)}" "$@"
 fi
 """.encode()
         )
