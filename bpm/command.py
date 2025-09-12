@@ -144,6 +144,7 @@ def cli_update(args):
                     f"`{repo.name}` has an update: {result[0]} -> {result[1]}. Updating..."
                 )
                 download_and_install(args, repo, rename=False)
+                repo.version = result[1]
                 log.info(f"`{repo.name}` updated successfully.")
             else:
                 log.info(f"`{repo.name}` is the newest.")

@@ -1,6 +1,6 @@
 [project]
 name = "bin-package-manager"
-version = "2.2.11"
+version = "2.2.12"
 description = "Bin package manager, a package manager based on Github release"
 authors = [{ name = "lxl66566", email = "lxl66566@gmail.com" }]
 license = "MIT"
