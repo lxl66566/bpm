@@ -1,5 +1,8 @@
 # bin package manager
 
+> [!CAUTION]
+> This project has been rewritten to Rust version and implemented some new features. The Python version is no longer maintained, please use [bpm-rs](https://github.com/lxl66566/bpm-rs) instead.
+
 English | [简体中文](./docs/README.zh-CN.md)
 
 Bin package manager (BPM) is a Github release-based package manager that allows users to install and manage binaries from any Github release.
@@ -9,8 +12,8 @@ BPM is currently supported on Linux and Windows, python >= 3.9.
 > [!CAUTION]
 > Risk Warning: Be aware of the potential risk of BPM Linux damaging your computer. By using BPM to install software, you accept this risk and trust third-party Github release packagers.
 
-> [TIP]
-> BPM guarantees parity, i.e., `bpm install` followed immediately by `bpm uninstall` will not change the system in any way.
+> [!TIP]
+> BPM guarantees parity, i.e., `bpm install xxx` followed immediately by `bpm uninstall xxx` will not change the system in most of the cases.
 
 ## Why use it?
 

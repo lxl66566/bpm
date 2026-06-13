@@ -1,5 +1,8 @@
 # bin package manager
 
+> [!CAUTION]
+> 本项目已经重写为 Rust 版本，并实现了一些新的特性。此 Python 版本已经不再维护，请使用 [bpm-rs](https://github.com/lxl66566/bpm-rs)。
+
 [English](../README.md) | 简体中文
 
 bin package manager (BPM) 是一个基于 Github release 的包管理器，它允许用户安装并管理任意 Github release 上的二进制文件。
